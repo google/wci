@@ -1,5 +1,5 @@
 flask==1.0.2
-Jinja2==2.10
+Jinja2==2.11.3
 MarkupSafe==2.0.1
 itsdangerous==2.0.1
 google-auth==1.25
