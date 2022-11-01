@@ -31,7 +31,7 @@ BQ_LINKED_TABLE  = os.environ.get('BQ_LINKED_TABLE')
 BQ_CHAT_TABLE = os.environ.get('BQ_CHAT_TABLE')
 BQ_CLIENT = bigquery.Client()
 
-def generate_a_protocol(identifier: str) -> Optional[str]:
+def generate_a_protocol(identifier: str, type: str) -> Optional[str]:
    """
     Helper function for generating a new protocol for a given request.
 
@@ -51,7 +51,7 @@ def generate_a_protocol(identifier: str) -> Optional[str]:
    # Verifies for errors
    errors = BQ_CLIENT.insert_rows(
       table, 
-      [(identifier, protocol, time.time() )]
+      [(identifier, type, protocol, time.time())]
    )  
    
    # Returns the generated protocol, or None if anything goes wrong

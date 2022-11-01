@@ -17,6 +17,7 @@
 
 
 import os
+from middlewares.auth import auth_required
 from helpers.webhook.helpers import generate_a_protocol, get_protocol_by_phone
 from flask import Blueprint, redirect, request
 
@@ -37,11 +38,10 @@ def process_protocol():
 
    # Collects gclid, phone from the URL
    identifier = request.args.get('gclid')
-   has_protocol = 'N/A'
-
-   # Existing either one of them, generates a protocol for this request
-   if(identifier):
-      has_protocol = generate_a_protocol(identifier)
+   type = request.args.get('type')
+   
+   # Always generate a protocol for every request
+   has_protocol = generate_a_protocol(identifier, type)
 
    # Redirects the request
    return redirect(f"https://wa.me/{ACCOUNT_NUMBER}?text=Protocol:{has_protocol}")    
@@ -72,7 +72,8 @@ def process_message():
    return "Success", 200
 
 @webhook_page.route('/webhook-wci', methods=['GET'])
-def validates_challenge():
+@auth_required
+def validates_challenge(auth_context):
    """
    Validates the webhook verification
 
@@ -83,7 +84,6 @@ def validates_challenge():
    """
 
    # Collects token and challenge
-   token = request.args.get('hub.verify_token')
    challenge = request.args.get('hub.challenge')
 
    # Redirects the request
