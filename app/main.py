@@ -22,8 +22,6 @@ from blueprints import *
 
 import os
 
-SECRET_KEY = os.environ.get('SECRET_KEY')
-
 # Enable Google Cloud Debugger
 # See https://cloud.google.com/debugger/docs/setup/python for more information.
 try:
@@ -33,7 +31,8 @@ except ImportError:
     pass
 
 app = Flask(__name__)
-app.secret_key = SECRET_KEY
+# Generates a random, safe secret key
+app.secret_key = os.urandom(12).hex()
 app.register_blueprint(webhook_page)
 
 if __name__ == '__main__':

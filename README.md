@@ -17,6 +17,6 @@ WCI offers a sample on how to integrate and track conversions that happen in bus
 In the Cloud Shell, execute the following commands:
 ``` shell
 git clone https://github.com/google/wci
-cd app
-gcloud app deploy
+cd wci
+. ./deployment/deploy.sh
 ```

@@ -11,16 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 runtime: python37
 
 env_variables:
-  BQ_LEAD_TABLE: ""
-  BQ_LINKED_TABLE: "" 
-  BQ_CHAT_TABLE: "" 
-  ACCOUNT_NUMBER: ""
-  SECRET_KEY: ""
+  BQ_LEAD_TABLE: "{{GOOGLE_CLOUD_PROJECT}}.{{BQ_DATASET_NAME}}.pending_leads"
+  BQ_LINKED_TABLE: "{{GOOGLE_CLOUD_PROJECT}}.{{BQ_DATASET_NAME}}.leads" 
+  BQ_CHAT_TABLE: "{{GOOGLE_CLOUD_PROJECT}}.{{BQ_DATASET_NAME}}.chat_leads" 
+  ACCOUNT_NUMBER: "{{ACCOUNT_NUMBER}}"
+  API_KEY: "{{API_KEY}}"
 
 handlers:  
   - url: /.*
