@@ -29,6 +29,7 @@ from google.cloud import bigquery
 BQ_LEAD_TABLE = os.environ.get('BQ_LEAD_TABLE')
 BQ_LINKED_TABLE  = os.environ.get('BQ_LINKED_TABLE')
 BQ_CHAT_TABLE = os.environ.get('BQ_CHAT_TABLE')
+PROTOCOL_MESSAGE = os.environ.get('PROTOCOL_MESSAGE')
 BQ_CLIENT = bigquery.Client()
 
 def generate_a_protocol(identifier: str, type: str) -> Optional[str]:
@@ -69,7 +70,7 @@ def get_protocol_by_phone(message:str, phone:str) -> Optional[str]:
    """
    # Checks if a protocol is within the given message
    # If not, returns None
-   has_protocol = re.match("Protocol:(\w+)", message)
+   has_protocol = re.match(f"{PROTOCOL_MESSAGE} (\w+)", message)
    
    # If no protocol was found, returns empty
    if has_protocol is None:
