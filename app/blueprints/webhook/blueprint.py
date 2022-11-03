@@ -22,6 +22,7 @@ from helpers.webhook.helpers import generate_a_protocol, get_protocol_by_phone
 from flask import Blueprint, redirect, request
 
 ACCOUNT_NUMBER = os.environ.get('ACCOUNT_NUMBER')
+PROTOCOL_MESSAGE = os.environ.get('PROTOCOL_MESSAGE')
 
 webhook_page = Blueprint('webhook', __name__)
 
@@ -44,7 +45,7 @@ def process_protocol():
    has_protocol = generate_a_protocol(identifier, type)
 
    # Redirects the request
-   return redirect(f"https://wa.me/{ACCOUNT_NUMBER}?text=Protocol:{has_protocol}")    
+   return redirect(f"https://wa.me/{ACCOUNT_NUMBER}?text={PROTOCOL_MESSAGE} {has_protocol}")    
 
 @webhook_page.route('/webhook-wci', methods=['POST'])
 def process_message():

@@ -19,7 +19,7 @@ This module includes decorators for authenticating requests.
 
 import os
 from functools import wraps
-from flask import request
+from flask import request, abort
 
 API_KEY = os.environ.get('API_KEY')
 
@@ -41,7 +41,7 @@ def auth_required(f):
 
         # In case the request comes from the challenge route
         if API_KEY != token:
-            return "Access denied", 403
+            return abort(403)
 
         return f(auth_context=True, *args, **kwargs)
     return decorated
