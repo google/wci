@@ -61,14 +61,13 @@ def process_message():
    # Collects the payload received
    payload = request.get_json()
 
-   if (payload.get("object") == "whatsapp_business_account" and payload.get("entry") is not None):
-      for each in payload.get("entry"):
-         for change in each['changes']:
-            if change['field'] == "messages":
-               get_protocol_by_phone(
-                  change['value']['messages'][0]['text']['body'], 
-                  change['value']['contacts'][0]['wa_id'])
-
+   if (payload.get("contactId") is not None and payload.get("type") == "messages"):
+      for message in payload.get("messages"):
+         get_protocol_by_phone(
+            message.get('message'), 
+            payload.get('contactId'),
+            message.get('fromCustomer') == "true") 
+          
    # Always return success
    return "Success", 200
 

@@ -55,11 +55,14 @@ function create_bq_dataset() {
 }
 function create_bq_tables(){
     start_message "Creating WCI schema:chat_leads..."
+    
+    bq rm -f -t $GOOGLE_CLOUD_PROJECT:$BQ_DATASET_NAME.chat_leads
+
     bq mk \
     --table \
     --description="BigQuery table for WCI" \
     $GOOGLE_CLOUD_PROJECT:$BQ_DATASET_NAME.chat_leads \
-    phone:STRING,message:STRING,timestamp:TIMESTAMP
+    phone:STRING,message:STRING,is_received:BOOL,timestamp:TIMESTAMP
     echo
 
     start_message "Creating WCI schema:pending_leads..."
