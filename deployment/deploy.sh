@@ -56,8 +56,6 @@ function create_bq_dataset() {
 function create_bq_tables(){
     start_message "Creating WCI schema:chat_leads..."
     
-    bq rm -f -t $GOOGLE_CLOUD_PROJECT:$BQ_DATASET_NAME.chat_leads
-
     bq mk \
     --table \
     --description="BigQuery table for WCI" \
@@ -83,7 +81,7 @@ function create_bq_tables(){
 }
 function deploy_app(){
     echo "${bold}${text_green}To deploy, inform the following values:${reset}"
-    echo -n "Type the WhatsApp Business Account Number (E.g. +5511999887766):"
+    echo -n "Type the WhatsApp Business Account Number (E.g. 5511999887766):"
     read -r ACCOUNT_NUMBER
 
     echo -n "Type the API Key:"
@@ -92,11 +90,15 @@ function deploy_app(){
     echo -n "Type the message to be sent with the protocol number (E.g. Your protocol is):"
     read -r PROTOCOL_MESSAGE
 
+    echo -n "Type the message to be sent AFTER the protocol number (E.g. Your protocol is 98765432. Hello, Advertiser):"
+    read -r WELCOME_MESSAGE
+
     sed -i "s/{{GOOGLE_CLOUD_PROJECT}}/$GOOGLE_CLOUD_PROJECT/g" ./app/app.yaml
     sed -i "s/{{BQ_DATASET_NAME}}/$BQ_DATASET_NAME/g" ./app/app.yaml
     sed -i "s/{{ACCOUNT_NUMBER}}/${ACCOUNT_NUMBER}/g" ./app/app.yaml
     sed -i "s/{{API_KEY}}/${API_KEY}/g" ./app/app.yaml
     sed -i "s/{{PROTOCOL_MESSAGE}}/${PROTOCOL_MESSAGE}/g" ./app/app.yaml
+    sed -i "s/{{WELCOME_MESSAGE}}/${WELCOME_MESSAGE}/g" ./app/app.yaml
     echo
 
     # Deploys the app 
