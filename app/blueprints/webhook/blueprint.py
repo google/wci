@@ -67,7 +67,7 @@ def process_message():
          get_protocol_by_phone(
             message.get('message'), 
             payload.get('contactId'),
-            message.get('fromCustomer') == "true") 
+            message.get('fromCustomer') == True) 
           
    # Always return success
    return "Success", 200
