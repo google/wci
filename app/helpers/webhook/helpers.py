@@ -58,7 +58,7 @@ def generate_a_protocol(identifier: str, type: str) -> Optional[str]:
    # Returns the generated protocol, or None if anything goes wrong
    return protocol if errors == [] else None
 
-def get_protocol_by_phone(message:str, phone:str) -> Optional[str]:
+def get_protocol_by_phone(message:str, phone:str, is_received: bool) -> Optional[str]:
    """
     Helper function for getting a generated protocol by a given phone number.
 
@@ -75,7 +75,7 @@ def get_protocol_by_phone(message:str, phone:str) -> Optional[str]:
    # If no protocol was found, returns empty
    if has_protocol is None:
       # Saves a copy of the received message
-      __save_message(message, phone)
+      __save_message(message, phone, is_received)
       return None
 
    # Captures the first group matched
@@ -105,24 +105,25 @@ def get_protocol_by_phone(message:str, phone:str) -> Optional[str]:
    # Returns the raw protocol
    return protocol
 
-def __save_message(message:str, phone:str) -> Optional[str]:
+def __save_message(message:str, phone:str, is_received:bool) -> Optional[str]:
    """
     Saves a copy of the received message
 
     Parameters:
        message (str)
        phone number (str)
-
+       is_received (bool) - message received or sent
     Output:
        none
    """
 
    # Updates the phone_number by protcol
    query = f"""
-      INSERT INTO `{BQ_CHAT_TABLE}` (phone, message, timestamp)
+      INSERT INTO `{BQ_CHAT_TABLE}` (phone, message, is_received, timestamp)
       VALUES (
          @phone,
          @message,
+         @is_received,
          CURRENT_TIMESTAMP()
       ) 
       """
@@ -130,7 +131,8 @@ def __save_message(message:str, phone:str) -> Optional[str]:
    job_config = bigquery.QueryJobConfig(
       query_parameters=[
          bigquery.ScalarQueryParameter("phone", "STRING", phone),
-         bigquery.ScalarQueryParameter("message", "STRING", message)
+         bigquery.ScalarQueryParameter("message", "STRING", message),
+         bigquery.ScalarQueryParameter("is_received", "BOOL", is_received)
       ]
    )
    # Executes the query

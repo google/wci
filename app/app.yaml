@@ -20,6 +20,7 @@ env_variables:
   ACCOUNT_NUMBER: "{{ACCOUNT_NUMBER}}"
   API_KEY: "{{API_KEY}}"
   PROTOCOL_MESSAGE: "{{PROTOCOL_MESSAGE}}"
+  WELCOME_MESSAGE: "{{WELCOME_MESSAGE}}"
 
 handlers:  
   - url: /.*
