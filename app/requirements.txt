@@ -4,5 +4,5 @@ MarkupSafe==2.0.1
 itsdangerous==2.0.1
 google-auth==1.25
 google-python-cloud-debugger
-google-cloud-bigquery==1.8.1
-google-cloud-core==0.29.1
+google-cloud-bigquery==3.4.0
+google-cloud-core==2.3.2

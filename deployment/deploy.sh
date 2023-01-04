@@ -55,11 +55,12 @@ function create_bq_dataset() {
 }
 function create_bq_tables(){
     start_message "Creating WCI schema:chat_leads..."
+    
     bq mk \
     --table \
     --description="BigQuery table for WCI" \
     $GOOGLE_CLOUD_PROJECT:$BQ_DATASET_NAME.chat_leads \
-    phone:STRING,message:STRING,timestamp:TIMESTAMP
+    phone:STRING,message:STRING,is_received:BOOL,timestamp:TIMESTAMP
     echo
 
     start_message "Creating WCI schema:pending_leads..."
@@ -80,7 +81,7 @@ function create_bq_tables(){
 }
 function deploy_app(){
     echo "${bold}${text_green}To deploy, inform the following values:${reset}"
-    echo -n "Type the WhatsApp Business Account Number (E.g. +5511999887766):"
+    echo -n "Type the WhatsApp Business Account Number (E.g. 5511999887766):"
     read -r ACCOUNT_NUMBER
 
     echo -n "Type the API Key:"
@@ -89,11 +90,15 @@ function deploy_app(){
     echo -n "Type the message to be sent with the protocol number (E.g. Your protocol is):"
     read -r PROTOCOL_MESSAGE
 
+    echo -n "Type the message to be sent AFTER the protocol number (E.g. Your protocol is 98765432. Hello, Advertiser):"
+    read -r WELCOME_MESSAGE
+
     sed -i "s/{{GOOGLE_CLOUD_PROJECT}}/$GOOGLE_CLOUD_PROJECT/g" ./app/app.yaml
     sed -i "s/{{BQ_DATASET_NAME}}/$BQ_DATASET_NAME/g" ./app/app.yaml
     sed -i "s/{{ACCOUNT_NUMBER}}/${ACCOUNT_NUMBER}/g" ./app/app.yaml
     sed -i "s/{{API_KEY}}/${API_KEY}/g" ./app/app.yaml
     sed -i "s/{{PROTOCOL_MESSAGE}}/${PROTOCOL_MESSAGE}/g" ./app/app.yaml
+    sed -i "s/{{WELCOME_MESSAGE}}/${WELCOME_MESSAGE}/g" ./app/app.yaml
     echo
 
     # Deploys the app 
@@ -101,13 +106,14 @@ function deploy_app(){
     gcloud app deploy ./app/app.yaml --service-account $SERVICE_ACCOUNT
     echo
 
-    echo "✅${bold}${text_green} App deployed${reset}"
+    echo "✅ ${bold}${text_green} App deployed${reset}"
     echo
     
     ENDPOINT="$(gcloud app browse | grep -oP '(http|https)://(.*)')"
     echo "${bold}${text_yellow}NEXT STEPS: To finalize, set your account's webhook to${reset}"
     echo "${bold}${text_yellow}Callback URL: ${ENDPOINT}/webhook-wci${reset}"
     echo "${bold}${text_yellow}Verify token: ${API_KEY}${reset}"
+    echo "${bold}${text_yellow}Lead URL: ${ENDPOINT}/webhook${reset}"
     echo
 }
 
@@ -124,52 +130,50 @@ function init() {
         echo "${bold}${text_yellow}WARNING! You are not running this script from the Google Cloud Shell environment.${reset}"
         echo
     fi
-    if ask "Do you wish to proceed?"; then
+
+    # Get parameters
+    if [ -z "${GOOGLE_CLOUD_PROJECT}" ]; then
+        GOOGLE_CLOUD_PROJECT="$(gcloud config get-value project)"
+    fi
+    
+    #Collects variables
+    BQ_DATASET_NAME=${BQ_DATASET_NAME:="wci"}
+    BQ_LOCATION=${BQ_DATASET_LOCATION:="US"}
+    SERVICE_ACCOUNT_NAME=${SERVICE_ACCOUNT_NAME:="wci-runner"}
+    SERVICE_ACCOUNT="${SERVICE_ACCOUNT_NAME}@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com"
+
+    # Confirm details
+    echo
+    echo "${bold}${text_green}Settings${reset}"
+    echo "${bold}${text_green}──────────────────────────────────────────${reset}"
+    echo "${bold}${text_green}Project ID: ${GOOGLE_CLOUD_PROJECT}${reset}"
+    echo
+    if ask "Continue?"; then
+        
         echo
-        # Get parameters
-        if [ -z "${GOOGLE_CLOUD_PROJECT}" ]; then
-            GOOGLE_CLOUD_PROJECT="$(gcloud config get-value project)"
+        EXISTING_SERVICE_ACCOUNT=$(gcloud iam service-accounts list --filter "email:${SERVICE_ACCOUNT_NAME}" --format="value(email)")
+        if [ -z "${EXISTING_SERVICE_ACCOUNT}" ]; then
+            create_service_account
+        else
+            echo
+            echo "${text_yellow}INFO: Service account '${SERVICE_ACCOUNT_NAME}' already exists.${reset}"
+            echo
+        fi
+
+        EXISTING_BQ_DATASET=$(bq ls --filter labels."name:${BQ_DATASET_NAME}")
+        echo 'Dataset' $EXISTING_BQ_DATASET
+        if [ -z "${EXISTING_BQ_DATASET}" ]; then
+            create_bq_dataset
+        else
+            echo
+            echo "${text_yellow}INFO: The dataset '${BQ_DATASET_NAME}' already exists."${reset}
+            echo
         fi
         
-        #Collects variables
-        BQ_DATASET_NAME=${BQ_DATASET_NAME:="wci"}
-        BQ_LOCATION=${BQ_DATASET_LOCATION:="US"}
-        SERVICE_ACCOUNT_NAME=${SERVICE_ACCOUNT_NAME:="wci-runner"}
-        SERVICE_ACCOUNT="${SERVICE_ACCOUNT_NAME}@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com"
-
-        # Confirm details
+        create_bq_tables
+        deploy_app
+        echo "✅ ${bold}${text_green} Deployment Done!${reset}"
         echo
-        echo "${bold}${text_green}Settings${reset}"
-        echo "${bold}${text_green}──────────────────────────────────────────${reset}"
-        echo "${bold}${text_green}Project ID: ${GOOGLE_CLOUD_PROJECT}${reset}"
-        echo
-        if ask "Continue?"; then
-            
-            echo
-            EXISTING_SERVICE_ACCOUNT=$(gcloud iam service-accounts list --filter "email:${SERVICE_ACCOUNT_NAME}" --format="value(email)")
-            if [ -z "${EXISTING_SERVICE_ACCOUNT}" ]; then
-                create_service_account
-            else
-                echo
-                echo "${text_yellow}INFO: Service account '${SERVICE_ACCOUNT_NAME}' already exists.${reset}"
-                echo
-            fi
-
-            EXISTING_BQ_DATASET=$(bq ls --filter labels."name:${BQ_DATASET_NAME}")
-            echo 'Dataset' $EXISTING_BQ_DATASET
-            if [ -z "${EXISTING_BQ_DATASET}" ]; then
-               create_bq_dataset
-            else
-                echo
-                echo "${text_yellow}INFO: The dataset '${BQ_DATASET_NAME}' already exists."${reset}
-                echo
-            fi
-            
-            create_bq_tables
-            deploy_app
-            echo "✅ ${bold}${text_green} Deployment Done!${reset}"
-            echo
-        fi
     fi
 }
 

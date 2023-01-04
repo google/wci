@@ -23,6 +23,7 @@ from flask import Blueprint, redirect, request
 
 ACCOUNT_NUMBER = os.environ.get('ACCOUNT_NUMBER')
 PROTOCOL_MESSAGE = os.environ.get('PROTOCOL_MESSAGE')
+WELCOME_MESSAGE = os.environ.get('WELCOME_MESSAGE')
 
 webhook_page = Blueprint('webhook', __name__)
 
@@ -45,7 +46,7 @@ def process_protocol():
    has_protocol = generate_a_protocol(identifier, type)
 
    # Redirects the request
-   return redirect(f"https://wa.me/{ACCOUNT_NUMBER}?text={PROTOCOL_MESSAGE} {has_protocol}")    
+   return redirect(f"https://wa.me/{ACCOUNT_NUMBER}?text={PROTOCOL_MESSAGE} {has_protocol}. {WELCOME_MESSAGE}")    
 
 @webhook_page.route('/webhook-wci', methods=['POST'])
 def process_message():
@@ -64,10 +65,11 @@ def process_message():
    if (payload.get("object") == "whatsapp_business_account" and payload.get("entry") is not None):
       for each in payload.get("entry"):
          for change in each['changes']:
-            if change['field'] == "messages":
+            if change['field'] == "messages" and change['value'].get("messages") is not None:
                get_protocol_by_phone(
                   change['value']['messages'][0]['text']['body'], 
-                  change['value']['contacts'][0]['wa_id'])
+                  change['value']['contacts'][0]['wa_id'],
+                  True) #TODO - this should be adapted to your logic
 
    # Always return success
    return "Success", 200
