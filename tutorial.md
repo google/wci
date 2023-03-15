@@ -11,7 +11,7 @@ WCI offers a sample on how to integrate and track conversions that happen in bus
 In the Cloud Shell, execute the following command:
 
 ``` bash
-. ./wci/deployment/deploy.sh
+. ./deployment/deploy.sh
 ```
 
 ## WCI Deployment - Step 1
