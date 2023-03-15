@@ -23,4 +23,4 @@ cd wci
 
 ## Guided Deployment
 If you want to do a guided deployment through Cloud Shell, click the link below:
-[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2Fgoogle%2Fwci&cloudshell_git_branch=main&cloudshell_tutorial=tutorial.md)
+[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2FHatuna%2Fwci&cloudshell_git_branch=main&cloudshell_tutorial=tutorial.md)
