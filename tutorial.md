@@ -8,13 +8,18 @@ WCI offers a sample on how to integrate and track conversions that happen in bus
 **Disclaimer:** This is not an officially supported Google product
 
 ## Setup
+First of all, you will need to configure the Google Cloud project you're going to use. for that, execute the following command:
+
+``` bash
+gcloud config set project {PROJECT_ID}
+```
+
+## WCI Deployment - Step 1
 In the Cloud Shell, execute the following command:
 
 ``` bash
 . ./deployment/deploy.sh
 ```
-
-## WCI Deployment - Step 1
 
 WCI will be deployed in the Google Cloud Project, and it will choose by default the current active project you're at. 
 If you want to deploy to the Active project, type Y/y to Continue
