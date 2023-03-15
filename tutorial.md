@@ -14,5 +14,28 @@ In the Cloud Shell, execute the following command:
 . ./wci/deployment/deploy.sh
 ```
 
-## WCI Deployment
+## WCI Deployment - Step 1
 
+WCI will be deployed in the Google Cloud Project, and it will choose by default the current active project you're at. 
+If you want to deploy to the Active project, type Y/y to Continue
+
+```bash
+Y
+```
+
+## WCI Deployment - Step 2
+
+During the App deployment, it will ask for a few specific information:
+- The Whatsapp Business Account number (e.g. 5511999888777)
+- The API Key (This is the WhatsApp API Key)
+- The message to be sent with the protocol number (E.g. *Your protocol is* XXXXXXXX)
+- Type the message to be sent AFTER the protocol number (E.g. Your protocol is 98765432. *Hello, Customer*)
+
+## Confirmation
+
+The solution will them prompt you to accept the services that will be deployed. 
+If they are all correct, please write Y/y to continue
+
+``` bash
+Y
+```
