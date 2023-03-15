@@ -8,7 +8,11 @@ WCI offers a sample on how to integrate and track conversions that happen in bus
 **Disclaimer:** This is not an officially supported Google product
 
 ## Setup
-First of all, you will need to configure the Google Cloud project you're going to use. for that, execute the following command:
+
+First of all, you will need to configure the Google Cloud project you're going to use.
+<walkthrough-project-setup></walkthrough-project-setup>
+
+After selecting the project in the menu above,  execute the following command:
 
 ``` bash
 export GOOGLE_CLOUD_PROJECT=<walkthrough-project-id/>
@@ -38,7 +42,7 @@ During the App deployment, it will ask for a few specific information:
 
 ## Confirmation
 
-The solution will them prompt you to accept the services that will be deployed. 
+The solution will then prompt you to accept the services that will be deployed. 
 If they are all correct, please write Y/y to continue
 
 ``` bash
