@@ -15,7 +15,7 @@ First of all, you will need to configure the Google Cloud project you're going t
 After selecting the project in the menu above,  execute the following command:
 
 ``` bash
-export GOOGLE_CLOUD_PROJECT=<walkthrough-project-id/>
+gcloud config set project <walkthrough-project-id/>
 ```
 
 ## WCI Deployment - Step 1
