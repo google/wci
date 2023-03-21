@@ -18,6 +18,7 @@ This module is the main flask application.
 """
 
 from flask import Flask
+from flask_cors import CORS
 from blueprints import *
 
 import os
@@ -31,6 +32,11 @@ except ImportError:
     pass
 
 app = Flask(__name__)
+# Enables CORS on the app
+# For safety, origins can be set into CORS
+# reference: https://flask-cors.readthedocs.io/en/latest/configuration.html
+CORS(app)
+
 # Generates a random, safe secret key
 app.secret_key = os.urandom(12).hex()
 app.register_blueprint(webhook_page)

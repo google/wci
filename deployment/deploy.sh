@@ -60,7 +60,7 @@ function create_bq_tables(){
     --table \
     --description="BigQuery table for WCI" \
     $GOOGLE_CLOUD_PROJECT:$BQ_DATASET_NAME.chat_leads \
-    phone:STRING,message:STRING,is_received:BOOL,timestamp:TIMESTAMP
+    sender:STRING,receiver:STRING,message:STRING,timestamp:TIMESTAMP
     echo
 
     start_message "Creating WCI schema:pending_leads..."
@@ -68,7 +68,7 @@ function create_bq_tables(){
     --table \
     --description="BigQuery table for WCI" \
     $GOOGLE_CLOUD_PROJECT:$BQ_DATASET_NAME.pending_leads \
-    identifier:STRING,type:STRING,protocol:STRING,timestamp:TIMESTAMP
+    identifier:STRING,type:STRING,protocol:STRING,mapped:JSON,timestamp:TIMESTAMP
     echo
 
     start_message "Creating WCI schema:leads..."
@@ -81,8 +81,6 @@ function create_bq_tables(){
 }
 function deploy_app(){
     echo "${bold}${text_green}To deploy, inform the following values:${reset}"
-    echo -n "Type the WhatsApp Business Account Number (E.g. 5511999887766):"
-    read -r ACCOUNT_NUMBER
 
     echo -n "Type the API Key:"
     read -r API_KEY
@@ -95,7 +93,6 @@ function deploy_app(){
 
     sed -i "s/{{GOOGLE_CLOUD_PROJECT}}/$GOOGLE_CLOUD_PROJECT/g" ./app/app.yaml
     sed -i "s/{{BQ_DATASET_NAME}}/$BQ_DATASET_NAME/g" ./app/app.yaml
-    sed -i "s/{{ACCOUNT_NUMBER}}/${ACCOUNT_NUMBER}/g" ./app/app.yaml
     sed -i "s/{{API_KEY}}/${API_KEY}/g" ./app/app.yaml
     sed -i "s/{{PROTOCOL_MESSAGE}}/${PROTOCOL_MESSAGE}/g" ./app/app.yaml
     sed -i "s/{{WELCOME_MESSAGE}}/${WELCOME_MESSAGE}/g" ./app/app.yaml
