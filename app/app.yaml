@@ -17,7 +17,6 @@ env_variables:
   BQ_LEAD_TABLE: "{{GOOGLE_CLOUD_PROJECT}}.{{BQ_DATASET_NAME}}.pending_leads"
   BQ_LINKED_TABLE: "{{GOOGLE_CLOUD_PROJECT}}.{{BQ_DATASET_NAME}}.leads" 
   BQ_CHAT_TABLE: "{{GOOGLE_CLOUD_PROJECT}}.{{BQ_DATASET_NAME}}.chat_leads" 
-  ACCOUNT_NUMBER: "{{ACCOUNT_NUMBER}}"
   API_KEY: "{{API_KEY}}"
   PROTOCOL_MESSAGE: "{{PROTOCOL_MESSAGE}}"
   WELCOME_MESSAGE: "{{WELCOME_MESSAGE}}"
@@ -27,3 +26,4 @@ handlers:
     script: auto
     secure: always
     redirect_http_response_code: 301
+    

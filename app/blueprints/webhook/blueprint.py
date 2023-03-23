@@ -19,34 +19,41 @@
 import os
 from middlewares.auth import auth_required
 from helpers.webhook.helpers import generate_a_protocol, get_protocol_by_phone
-from flask import Blueprint, redirect, request
+from flask import Blueprint, request, jsonify
 
-ACCOUNT_NUMBER = os.environ.get('ACCOUNT_NUMBER')
 PROTOCOL_MESSAGE = os.environ.get('PROTOCOL_MESSAGE')
 WELCOME_MESSAGE = os.environ.get('WELCOME_MESSAGE')
 
 webhook_page = Blueprint('webhook', __name__)
 
-@webhook_page.route('/webhook', methods=['GET'])
+@webhook_page.route('/webhook', methods=['GET', 'POST'])
 def process_protocol():
    """
-   Generates a new protocol and redirects to whatsapp
+   Generates a new protocol
 
    Parameters:
       None
    Output:
-      Redirects client to the whatsapp channel
+      Returns the newly generated protocol number for the received lead
    """
 
    # Collects gclid, phone from the URL
-   identifier = request.args.get('gclid')
-   type = request.args.get('type')
+   identifier = request.args.get('id') 
+   type = request.args.get('type') or 'gclid'
    
+   # Checks if this is a post with a payload to be associated with
+   # the protocol number
+   payload = None
+   if request.is_json:
+      payload = request.get_json(silent=True)
+
    # Always generate a protocol for every request
-   has_protocol = generate_a_protocol(identifier, type)
+   has_protocol = generate_a_protocol(identifier, type, payload)
 
    # Redirects the request
-   return redirect(f"https://wa.me/{ACCOUNT_NUMBER}?text={PROTOCOL_MESSAGE} {has_protocol}. {WELCOME_MESSAGE}")    
+   return jsonify(protocol=has_protocol,
+                  message=f"{PROTOCOL_MESSAGE.strip()} {has_protocol}. {WELCOME_MESSAGE.strip()}"
+                  ), 200
 
 @webhook_page.route('/webhook-wci', methods=['POST'])
 def process_message():
@@ -69,7 +76,8 @@ def process_message():
                get_protocol_by_phone(
                   change['value']['messages'][0]['text']['body'], 
                   change['value']['contacts'][0]['wa_id'],
-                  True) #TODO - this should be adapted to your logic
+                  change['value']['metadata']['display_phone_number']) 
+                  #TODO - this should be adapted to your logic
 
    # Always return success
    return "Success", 200
