@@ -1,8 +1,10 @@
-flask==1.0.2
-Jinja2==2.11.3
-MarkupSafe==2.0.1
+flask==2.2.3
+flask-cors==3.0.10
+Jinja2==3.1.2
+MarkupSafe==2.1.1
 itsdangerous==2.0.1
 google-auth==1.25
 google-python-cloud-debugger
 google-cloud-bigquery==3.4.0
 google-cloud-core==2.3.2
+tadau

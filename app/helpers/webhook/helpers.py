@@ -17,6 +17,7 @@
 A collection of helper functions for webhook related operations.
 """
 
+import json
 import os
 import uuid
 import zlib
@@ -32,7 +33,7 @@ BQ_CHAT_TABLE = os.environ.get('BQ_CHAT_TABLE')
 PROTOCOL_MESSAGE = os.environ.get('PROTOCOL_MESSAGE')
 BQ_CLIENT = bigquery.Client()
 
-def generate_a_protocol(identifier: str, type: str) -> Optional[str]:
+def generate_a_protocol(identifier: str, type: str, payload:Optional[any]) -> Optional[str]:
    """
     Helper function for generating a new protocol for a given request.
 
@@ -49,21 +50,26 @@ def generate_a_protocol(identifier: str, type: str) -> Optional[str]:
    # Gets the table to be used within BQ
    table = BQ_CLIENT.get_table(BQ_LEAD_TABLE)
 
+   # Collects mapping identifiers if any
+   mapped = json.dumps(payload) if payload else None
+
    # Verifies for errors
    errors = BQ_CLIENT.insert_rows(
       table, 
-      [(identifier, type, protocol, time.time())]
+      [(identifier, type, protocol, mapped, time.time())]
    )  
    
    # Returns the generated protocol, or None if anything goes wrong
    return protocol if errors == [] else None
 
-def get_protocol_by_phone(message:str, phone:str, is_received: bool) -> Optional[str]:
+def get_protocol_by_phone(message:str, sender:str, receiver: bool) -> Optional[str]:
    """
-    Helper function for getting a generated protocol by a given phone number.
+    Helper function for getting a generated protocol for a given sender.
 
     Parameters:
-       phone number (str)
+       message (str)
+       sender (str)
+       receiver (str)
 
     Output:
        found protocol or none
@@ -75,7 +81,7 @@ def get_protocol_by_phone(message:str, phone:str, is_received: bool) -> Optional
    # If no protocol was found, returns empty
    if has_protocol is None:
       # Saves a copy of the received message
-      __save_message(message, phone, is_received)
+      __save_message(message, sender, receiver)
       return None
 
    # Captures the first group matched
@@ -95,7 +101,7 @@ def get_protocol_by_phone(message:str, phone:str, is_received: bool) -> Optional
    # Sets phone_number parameter   
    job_config = bigquery.QueryJobConfig(
       query_parameters=[
-         bigquery.ScalarQueryParameter("phone", "STRING", phone),
+         bigquery.ScalarQueryParameter("phone", "STRING", sender),
          bigquery.ScalarQueryParameter("protocol", "STRING", protocol)
       ]
    )
@@ -105,23 +111,24 @@ def get_protocol_by_phone(message:str, phone:str, is_received: bool) -> Optional
    # Returns the raw protocol
    return protocol
 
-def __save_message(message:str, phone:str, is_received:bool) -> Optional[str]:
+def __save_message(message:str, sender:str, receiver:str) -> Optional[str]:
    """
     Saves a copy of the received message
 
     Parameters:
        message (str)
-       phone number (str)
-       is_received (bool) - message received or sent
+       sender (str)
+       receiver (str)
     Output:
        none
    """
 
    # Updates the phone_number by protcol
    query = f"""
-      INSERT INTO `{BQ_CHAT_TABLE}` (phone, message, is_received, timestamp)
+      INSERT INTO `{BQ_CHAT_TABLE}` (sender, receiver, message, timestamp)
       VALUES (
-         @phone,
+         @sender,
+         @receiver,
          @message,
          @is_received,
          CURRENT_TIMESTAMP()
@@ -130,9 +137,9 @@ def __save_message(message:str, phone:str, is_received:bool) -> Optional[str]:
    # Sets phone_number parameter   
    job_config = bigquery.QueryJobConfig(
       query_parameters=[
-         bigquery.ScalarQueryParameter("phone", "STRING", phone),
-         bigquery.ScalarQueryParameter("message", "STRING", message),
-         bigquery.ScalarQueryParameter("is_received", "BOOL", is_received)
+         bigquery.ScalarQueryParameter("sender", "STRING", sender),
+         bigquery.ScalarQueryParameter("receiver", "STRING", receiver),
+         bigquery.ScalarQueryParameter("message", "STRING", message)
       ]
    )
    # Executes the query
