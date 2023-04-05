@@ -20,6 +20,7 @@ env_variables:
   API_KEY: "{{API_KEY}}"
   PROTOCOL_MESSAGE: "{{PROTOCOL_MESSAGE}}"
   WELCOME_MESSAGE: "{{WELCOME_MESSAGE}}"
+  STATS_OPTIN: "{{STATS_OPTIN}}"
 
 handlers:  
   - url: /.*
