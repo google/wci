@@ -21,6 +21,7 @@ env_variables:
   PROTOCOL_MESSAGE: "{{PROTOCOL_MESSAGE}}"
   WELCOME_MESSAGE: "{{WELCOME_MESSAGE}}"
   STATS_OPTIN: "{{STATS_OPTIN}}"
+  ACCOUNT_NUMBER: "{{ACCOUNT_NUMBER}}"
 
 handlers:  
   - url: /.*

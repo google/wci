@@ -102,6 +102,7 @@ function deploy_app(){
     sed -i "s/{{PROTOCOL_MESSAGE}}/${PROTOCOL_MESSAGE}/g" ./app/app.yaml
     sed -i "s/{{WELCOME_MESSAGE}}/${WELCOME_MESSAGE}/g" ./app/app.yaml
     sed -i "s/{{STATS_OPTIN}}/${STATS_OPTIN}/g" ./app/app.yaml
+    sed -i "s/{{ACCOUNT_NUMBER}}/${ACCOUNT_NUMBER}/g" ./app/app.yaml
     echo
 
     # Deploys the app 
