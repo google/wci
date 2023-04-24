@@ -56,8 +56,8 @@ def process_protocol():
    if STATS_OPTIN != 'no':
       Tadau().process([{
          'client_id': has_protocol,
-         'name': 'lead',
-         'solution': 'wci',
+         'name': 'wci',
+         'action': 'lead',
          'context': request.referrer,
       }])
 
