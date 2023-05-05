@@ -19,8 +19,7 @@
 import os
 from middlewares.auth import auth_required
 from helpers.webhook.helpers import generate_a_protocol, get_protocol_by_phone
-from flask import Blueprint, request, jsonify
-from tadau.measurement_protocol import Tadau
+from flask import Blueprint, request, redirect, jsonify
 
 PROTOCOL_MESSAGE = os.environ.get('PROTOCOL_MESSAGE')
 WELCOME_MESSAGE = os.environ.get('WELCOME_MESSAGE')
@@ -55,16 +54,21 @@ def process_protocol():
 
    # Stats of usage
    if STATS_OPTIN != 'no':
-      Tadau().process([{
-         'client_id': f"{has_protocol}",
-         'name': 'lead_generated',
-         'solution': 'wci',
-      }])
+      try:
+         from tadau.measurement_protocol import Tadau
+         Tadau().process([{
+            'client_id': f"{has_protocol}",
+            'name': 'wci',
+            'action': 'lead',
+            'context': request.referrer,
+         }])
+      except:
+         pass
 
    # Redirects the request
    return jsonify(protocol=has_protocol,
                   message=f"{PROTOCOL_MESSAGE.strip()} {has_protocol}. {WELCOME_MESSAGE.strip()}"
-                  ), 200   
+                  ), 200 
 
 @webhook_page.route('/webhook-wci', methods=['POST'])
 def process_message():
