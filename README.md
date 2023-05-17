@@ -14,11 +14,9 @@ WCI offers a sample on how to integrate and track conversions that happen in bus
  - Whatsapp Business Account
 
 ## Deployment
-In the Cloud Shell, execute the following commands:
+In the Cloud Shell, execute the following command:
 ``` shell
-git clone https://github.com/google/wci
-cd wci
-. ./deployment/deploy.sh
+git clone https://github.com/google/wci && cd wci && sh ./deployment/deploy.sh
 ```
 
 ## Guided Deployment

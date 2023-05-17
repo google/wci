@@ -22,8 +22,7 @@ text_green="$(tput setaf 2)"
 function start_message() {
     echo "☑️  ${bold}${text_green}$1${reset}"
 }
-
-ask() {
+function ask() {
     while true; do
     read -r -p "${BOLD}${1:-Continue?} : ${NOFORMAT}"
     case ${REPLY:0:1} in
@@ -33,7 +32,24 @@ ask() {
     esac
     done
 }
+function enable_services(){
+    start_message "Enabling required services (artifactregistry, cloud run)"
+    gcloud services enable run.googleapis.com
+    gcloud services enable artifactregistry.googleapis.com
+}
+function create_artifacts(){
+    gcloud artifacts repositories create wci \
+    --repository-format=docker \
+    --location=$REGION \
+    --description="WCI Repo"
 
+    # Builds WCI image
+    start_message "Builds WCI Image..."
+    docker build ./ -t wci -f ./deployment/docker/Dockerfile
+    docker tag wci $REGION-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/wci/wci
+    docker push $REGION-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/wci/wci
+    echo 
+}
 function create_service_account() {
     start_message "Creating the service account ${SERVICE_ACCOUNT_NAME}..."
     gcloud iam service-accounts create $SERVICE_ACCOUNT_NAME \
@@ -41,7 +57,7 @@ function create_service_account() {
     # Add editor role to the service account
     gcloud projects add-iam-policy-binding $GOOGLE_CLOUD_PROJECT \
     --member "serviceAccount:${SERVICE_ACCOUNT}" \
-    --role "roles/editor"
+    --role "roles/bigquery.admin"
     echo
 }
 function create_bq_dataset() {
@@ -76,7 +92,7 @@ function create_bq_tables(){
     --table \
     --description="BigQuery table for WCI" \
     $GOOGLE_CLOUD_PROJECT:$BQ_DATASET_NAME.leads \
-    protocol:STRING,identifier:STRING,phone:STRING,timestamp:TIMESTAMP
+    protocol:STRING,phone:STRING,timestamp:TIMESTAMP
     echo
 }
 function deploy_app(){
@@ -94,30 +110,43 @@ function deploy_app(){
     echo -n "Optin to collect usage stats to improve the solution (E.g. yes/no):"
     read -r STATS_OPTIN
 
-    sed -i "s/{{GOOGLE_CLOUD_PROJECT}}/$GOOGLE_CLOUD_PROJECT/g" ./app/app.yaml
-    sed -i "s/{{BQ_DATASET_NAME}}/$BQ_DATASET_NAME/g" ./app/app.yaml
-    sed -i "s/{{API_KEY}}/${API_KEY}/g" ./app/app.yaml
-    sed -i "s/{{PROTOCOL_MESSAGE}}/${PROTOCOL_MESSAGE}/g" ./app/app.yaml
-    sed -i "s/{{WELCOME_MESSAGE}}/${WELCOME_MESSAGE}/g" ./app/app.yaml
-    sed -i "s/{{STATS_OPTIN}}/${STATS_OPTIN}/g" ./app/app.yaml
+    cp ./app/app.yaml ./deployment/
+
+    sed -i "s/{{GOOGLE_CLOUD_PROJECT}}/$GOOGLE_CLOUD_PROJECT/g" ./deployment/app.yaml
+    sed -i "s/{{REGION}}/$REGION/g" ./deployment/app.yaml
+    sed -i "s/{{SERVICE_ACCOUNT}}/${SERVICE_ACCOUNT}/g" ./deployment/app.yaml
+    sed -i "s/{{BQ_DATASET_NAME}}/$BQ_DATASET_NAME/g" ./deployment/app.yaml
+    sed -i "s/{{API_KEY}}/${API_KEY}/g" ./deployment/app.yaml
+    sed -i "s/{{PROTOCOL_MESSAGE}}/${PROTOCOL_MESSAGE}/g" ./deployment/app.yaml
+    sed -i "s/{{WELCOME_MESSAGE}}/${WELCOME_MESSAGE}/g" ./deployment/app.yaml
+    sed -i "s/{{STATS_OPTIN}}/${STATS_OPTIN}/g" ./deployment/app.yaml
     echo
 
-    # Deploys the app 
-    start_message "Deploying WCI App..."
-    gcloud app deploy ./app/app.yaml --service-account $SERVICE_ACCOUNT
+    # Create repository for docker image
+    create_artifacts
+    echo    
+
+    # Deploys the service 
+    start_message "Deploying WCI Service..."
+    gcloud run services replace ./deployment/app.yaml
     echo
 
-    echo "✅ ${bold}${text_green} App deployed${reset}"
+    echo "✅ ${bold}${text_green} Service deployed${reset}"
     echo
-    
-    ENDPOINT="$(gcloud app browse | grep -oP '(http|https)://(.*)')"
+
+    start_message "Making WCI accessible..."
+    gcloud run services add-iam-policy-binding wci --region $REGION \
+    --member="allUsers" \
+    --role="roles/run.invoker"
+    echo
+
+    ENDPOINT="$(gcloud run services list | grep -oP '(http|https)://wci(.*)')"
     echo "${bold}${text_yellow}NEXT STEPS: To finalize, set your account's webhook to${reset}"
-    echo "${bold}${text_yellow}Callback URL: ${ENDPOINT}/webhook-wci${reset}"
-    echo "${bold}${text_yellow}Verify token: ${API_KEY}${reset}"
-    echo "${bold}${text_yellow}Lead URL: ${ENDPOINT}/webhook${reset}"
+    echo "${bold}Callback URL: ${text_yellow}${ENDPOINT}/webhook-wci${reset}"
+    echo "${bold}Verify token: ${text_yellow}${API_KEY}${reset}"
+    echo "${bold}Lead URL: ${text_yellow}${ENDPOINT}/webhook${reset}"
     echo
 }
-
 function init() {
     echo
     echo "${bold}┌────────────────┐${reset}"
@@ -140,6 +169,7 @@ function init() {
     #Collects variables
     BQ_DATASET_NAME=${BQ_DATASET_NAME:="wci"}
     BQ_LOCATION=${BQ_DATASET_LOCATION:="US"}
+    REGION=${REGION:="us-central1"}
     SERVICE_ACCOUNT_NAME=${SERVICE_ACCOUNT_NAME:="wci-runner"}
     SERVICE_ACCOUNT="${SERVICE_ACCOUNT_NAME}@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com"
 
@@ -150,6 +180,9 @@ function init() {
     echo "${bold}${text_green}Project ID: ${GOOGLE_CLOUD_PROJECT}${reset}"
     echo
     if ask "Continue?"; then
+        
+        echo
+        enable_services
         
         echo
         EXISTING_SERVICE_ACCOUNT=$(gcloud iam service-accounts list --filter "email:${SERVICE_ACCOUNT_NAME}" --format="value(email)")

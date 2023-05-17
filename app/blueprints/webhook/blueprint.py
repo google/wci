@@ -12,15 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-# This module is the Flask blueprint for the sign-in page (/signin).
-
-
 import os
 from middlewares.auth import auth_required
 from helpers.webhook.helpers import generate_a_protocol, get_protocol_by_phone
 from flask import Blueprint, request, jsonify
-from tadau.measurement_protocol import Tadau
 
 PROTOCOL_MESSAGE = os.environ.get('PROTOCOL_MESSAGE')
 WELCOME_MESSAGE = os.environ.get('WELCOME_MESSAGE')
@@ -54,12 +49,17 @@ def process_protocol():
 
    # Stats of usage
    if STATS_OPTIN != 'no':
-      Tadau().process([{
-         'client_id': has_protocol,
-         'name': 'wci',
-         'action': 'lead',
-         'context': request.referrer,
-      }])
+      try:
+         from tadau.measurement_protocol import Tadau
+         Tadau().process([{
+            'client_id': f"{has_protocol}",
+            'name': 'wci',
+            'action': 'lead',
+            'context': request.referrer,
+         }])
+      except:
+         pass
+
 
    # Redirects the request
    return jsonify(protocol=has_protocol,
@@ -109,4 +109,8 @@ def validates_challenge(auth_context):
    challenge = request.args.get('hub.challenge')
 
    # Redirects the request
-   return challenge, 200  
+   return challenge, 200
+ 
+@webhook_page.route('/health_checker', methods=['GET'])
+def health_checker():
+    return 'alive', 200 
