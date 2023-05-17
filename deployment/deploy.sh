@@ -38,13 +38,15 @@ function enable_services(){
     gcloud services enable artifactregistry.googleapis.com
 }
 function create_artifacts(){
+    start_message "Creating WCI repository"
     gcloud artifacts repositories create wci \
     --repository-format=docker \
     --location=$REGION \
     --description="WCI Repo"
+    echo
 
     # Builds WCI image
-    start_message "Builds WCI Image..."
+    start_message "Building WCI Image..."
     docker build ./ -t wci -f ./deployment/docker/Dockerfile
     docker tag wci $REGION-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/wci/wci
     docker push $REGION-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/wci/wci
