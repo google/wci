@@ -89,10 +89,9 @@ def get_protocol_by_phone(message:str, sender:str, receiver: bool) -> Optional[s
 
    # Updates the phone_number by protcol
    query = f"""
-      INSERT INTO `{BQ_LINKED_TABLE}` (protocol, identifier, phone, timestamp)
+      INSERT INTO `{BQ_LINKED_TABLE}` (protocol, phone, timestamp)
       SELECT 
          protocol,
-         identifier,
          @phone as phone,
          CURRENT_TIMESTAMP() as timestamp
       FROM `{BQ_LEAD_TABLE}`
