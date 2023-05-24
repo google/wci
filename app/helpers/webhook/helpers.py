@@ -130,7 +130,6 @@ def __save_message(message:str, sender:str, receiver:str) -> Optional[str]:
          @sender,
          @receiver,
          @message,
-         @is_received,
          CURRENT_TIMESTAMP()
       ) 
       """
