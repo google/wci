@@ -3,14 +3,13 @@ import time
 from typing import Optional
 
 from google.cloud import bigquery
-from data_sources.data_source import DataSource
 
 BQ_LEAD_TABLE = os.environ.get('BQ_LEAD_TABLE')
 BQ_LINKED_TABLE  = os.environ.get('BQ_LINKED_TABLE')
 BQ_CHAT_TABLE = os.environ.get('BQ_CHAT_TABLE')
 PROTOCOL_MESSAGE = os.environ.get('PROTOCOL_MESSAGE')
 
-class BigQueryDataSource (DataSource):
+class BigQueryDataSource ():
 
     def __init__ (self, db_options: Optional[dict]):
         # continue later authenticate with BQ and set options ex. if locations, project_id --> set location,
