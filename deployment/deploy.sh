@@ -45,6 +45,13 @@ function create_artifacts(){
     --description="WCI Repo"
     echo
 
+    # Ensures docker is logged-in
+    # If not, there may be a permission denied when uploading
+    # the artifcats
+    start_message "Docker Authorization"
+    gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://$REGION-docker.pkg.dev
+    echo
+
     # Builds WCI image
     start_message "Building WCI Image..."
     docker build ./ -t wci -f ./deployment/docker/Dockerfile
