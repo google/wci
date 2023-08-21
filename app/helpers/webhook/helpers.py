@@ -21,17 +21,14 @@ import json
 import os
 import uuid
 import zlib
-import uuid
 import time
 import re
 from typing import Optional
-from google.cloud import bigquery
+from app.data_sources.bigquery.bigquery_data_source import BigQueryDataSource
+from app.data_sources.data_output import DataSource
 
-BQ_LEAD_TABLE = os.environ.get('BQ_LEAD_TABLE')
-BQ_LINKED_TABLE  = os.environ.get('BQ_LINKED_TABLE')
-BQ_CHAT_TABLE = os.environ.get('BQ_CHAT_TABLE')
 PROTOCOL_MESSAGE = os.environ.get('PROTOCOL_MESSAGE')
-BQ_CLIENT = bigquery.Client()
+data_source = DataSource(os.environ.get('DATA_SOURCE_TYPE')).get_data_source()
 
 def generate_a_protocol(identifier: str, type: str, payload:Optional[any]) -> Optional[str]:
    """
@@ -43,22 +40,16 @@ def generate_a_protocol(identifier: str, type: str, payload:Optional[any]) -> Op
     Output:
        a new Protocol.
    """
-    
+   
    # Generates a protocol based on current timestamp
    protocol = zlib.crc32(f'{uuid.uuid1()}'.encode())
-
-   # Gets the table to be used within BQ
-   table = BQ_CLIENT.get_table(BQ_LEAD_TABLE)
 
    # Collects mapping identifiers if any
    mapped = json.dumps(payload) if payload else None
 
-   # Verifies for errors
-   errors = BQ_CLIENT.insert_rows(
-      table, 
-      [(identifier, type, protocol, mapped, time.time())]
-   )  
-   
+   # Sends protocol to db
+   errors = data_source.store_protocol(identifier, type, protocol, mapped)
+
    # Returns the generated protocol, or None if anything goes wrong
    return protocol if errors == [] else None
 
@@ -88,24 +79,7 @@ def get_protocol_by_phone(message:str, sender:str, receiver: bool) -> Optional[s
    protocol = has_protocol.group(1)
 
    # Updates the phone_number by protcol
-   query = f"""
-      INSERT INTO `{BQ_LINKED_TABLE}` (protocol, phone, timestamp)
-      SELECT 
-         protocol,
-         @phone as phone,
-         CURRENT_TIMESTAMP() as timestamp
-      FROM `{BQ_LEAD_TABLE}`
-      WHERE protocol = @protocol
-      """
-   # Sets phone_number parameter   
-   job_config = bigquery.QueryJobConfig(
-      query_parameters=[
-         bigquery.ScalarQueryParameter("phone", "STRING", sender),
-         bigquery.ScalarQueryParameter("protocol", "STRING", protocol)
-      ]
-   )
-   # Executes the query
-   BQ_CLIENT.query(query, job_config=job_config).result()
+   data_source.store_lead(sender, protocol)
 
    # Returns the raw protocol
    return protocol
@@ -123,23 +97,5 @@ def __save_message(message:str, sender:str, receiver:str) -> Optional[str]:
    """
 
    # Updates the phone_number by protcol
-   query = f"""
-      INSERT INTO `{BQ_CHAT_TABLE}` (sender, receiver, message, timestamp)
-      VALUES (
-         @sender,
-         @receiver,
-         @message,
-         CURRENT_TIMESTAMP()
-      ) 
-      """
-   # Sets phone_number parameter   
-   job_config = bigquery.QueryJobConfig(
-      query_parameters=[
-         bigquery.ScalarQueryParameter("sender", "STRING", sender),
-         bigquery.ScalarQueryParameter("receiver", "STRING", receiver),
-         bigquery.ScalarQueryParameter("message", "STRING", message)
-      ]
-   )
-   # Executes the query
-   BQ_CLIENT.query(query, job_config=job_config).result()
+   data_source.store_message(message, sender, receiver)
 
