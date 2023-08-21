@@ -1,4 +1,5 @@
-from typing import Enum, Optional
+from enum import Enum
+from typing import Optional
 from data_sources.bigquery.bigquery_data_source import BigQueryDataSource
 
 class SourceType(Enum):
