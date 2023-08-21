@@ -1,13 +1,9 @@
-import json
 import os
-import uuid
-import zlib
 import time
-import re
 from typing import Optional
 
 from google.cloud import bigquery
-from app.data_sources.data_output import DataSource
+from data_sources.data_source import DataSource
 
 BQ_LEAD_TABLE = os.environ.get('BQ_LEAD_TABLE')
 BQ_LINKED_TABLE  = os.environ.get('BQ_LINKED_TABLE')

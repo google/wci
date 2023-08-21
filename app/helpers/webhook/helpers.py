@@ -24,8 +24,7 @@ import zlib
 import time
 import re
 from typing import Optional
-from app.data_sources.bigquery.bigquery_data_source import BigQueryDataSource
-from app.data_sources.data_output import DataSource
+from data_sources.data_source import DataSource
 
 PROTOCOL_MESSAGE = os.environ.get('PROTOCOL_MESSAGE')
 data_source = DataSource(os.environ.get('DATA_SOURCE_TYPE')).get_data_source()
