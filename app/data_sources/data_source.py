@@ -3,11 +3,11 @@ from typing import Optional
 from data_sources.bigquery.bigquery_data_source import BigQueryDataSource
 
 class SourceType(Enum):
-    BIG_QUERY = range(1)
+    (BIG_QUERY, FILE) = range(1)
 
 class DataSource:
     def __init__(self, source_type: SourceType):
-        self._source_type = SourceType(source_type)
+        self._source_type = SourceType[source_type]
 
     def get_data_source(self):
         data_source = None
