@@ -7,7 +7,7 @@ class SourceType(Enum):
 
 class DataSource:
     def __init__(self, source_type: SourceType):
-        self._source_type = source_type
+        self._source_type = SourceType(source_type)
 
     def get_data_source(self):
         data_source = None
