@@ -46,10 +46,10 @@ def generate_a_protocol(identifier: str, type: str, payload:Optional[any]) -> Op
    mapped = json.dumps(payload) if payload else None
 
    # Sends protocol to db
-   errors = data_source.store_protocol(identifier, type, protocol, mapped)
+   data_source.save_protocol(identifier, type, protocol, mapped)
 
-   # Returns the generated protocol, or None if anything goes wrong
-   return protocol if errors == [] else None
+   # Returns the generated protocol
+   return protocol
 
 def get_protocol_by_phone(message:str, sender:str, receiver: bool) -> Optional[str]:
    """
@@ -70,30 +70,32 @@ def get_protocol_by_phone(message:str, sender:str, receiver: bool) -> Optional[s
    # If no protocol was found, returns empty
    if has_protocol is None:
       # Saves a copy of the received message
-      __save_message(message, sender, receiver)
+      data_source.save_message(message, sender, receiver)
       return None
 
    # Captures the first group matched
    protocol = has_protocol.group(1)
 
    # Updates the phone_number by protcol
-   data_source.store_lead(sender, protocol)
+   data_source.save_phone_protocol_match(sender, protocol)
 
    # Returns the raw protocol
    return protocol
 
-def __save_message(message:str, sender:str, receiver:str) -> Optional[str]:
+def get_domain_from_url(url: str) -> str:
    """
-    Saves a copy of the received message
+      Helper function to extract domain from a given url
 
-    Parameters:
-       message (str)
-       sender (str)
-       receiver (str)
-    Output:
-       none
+      Parameters:
+         url: full url that may contain paths, paramerters and achors
+
+      Output:
+         Extracted domain or "Not set"    
    """
 
-   # Updates the phone_number by protcol
-   data_source.store_message(message, sender, receiver)
+   domain = re.match("([^\n\?\=\&\# ]+)", url)
 
+   if domain is None:
+         return "Not set"
+   
+   return domain.group(1)

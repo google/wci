@@ -54,7 +54,7 @@ function create_artifacts(){
 
     # Builds WCI image
     start_message "Building WCI Image..."
-    docker build ./ -t wci -f ./deployment/docker/Dockerfile
+    docker build --no-cache ./ -t wci -f ./deployment/docker/Dockerfile
     docker tag wci $REGION-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/wci/wci
     docker push $REGION-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/wci/wci
     echo 
