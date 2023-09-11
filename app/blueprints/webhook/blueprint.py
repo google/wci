@@ -14,7 +14,7 @@
 
 import os
 from middlewares.auth import auth_required
-from helpers.webhook.helpers import generate_a_protocol, get_protocol_by_phone
+from helpers.webhook.helpers import generate_a_protocol, get_domain_from_url, get_protocol_by_phone
 from flask import Blueprint, request, jsonify
 
 PROTOCOL_MESSAGE = os.environ.get('PROTOCOL_MESSAGE')
@@ -55,7 +55,7 @@ def process_protocol():
             'client_id': f"{has_protocol}",
             'name': 'wci',
             'action': 'lead',
-            'context': request.referrer,
+            'context': get_domain_from_url(request.referrer),
          }])
       except:
          pass
