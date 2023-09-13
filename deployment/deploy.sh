@@ -116,6 +116,9 @@ function deploy_app(){
     echo -n "Type the message to be sent AFTER the protocol number (E.g. Your protocol is 98765432. Hello, Advertiser):"
     read -r WELCOME_MESSAGE
 
+    echo -n "How would like to connect to your WhatsApp Business Account? Through BOTMAKER, TAKE, WHATSAPP (Choose and type one):"
+    read -r PARTNER_TYPE
+
     echo -n "Optin to collect usage stats to improve the solution (E.g. yes/no):"
     read -r STATS_OPTIN
 
@@ -129,6 +132,7 @@ function deploy_app(){
     sed -i "s/{{PROTOCOL_MESSAGE}}/${PROTOCOL_MESSAGE}/g" ./deployment/app.yaml
     sed -i "s/{{WELCOME_MESSAGE}}/${WELCOME_MESSAGE}/g" ./deployment/app.yaml
     sed -i "s/{{STATS_OPTIN}}/${STATS_OPTIN}/g" ./deployment/app.yaml
+    sed -i "s/{{PARTNER_TYPE}}/${PARTNER_TYPE}/g" ./deployment/app.yaml
     echo
 
     # Create repository for docker image

@@ -31,6 +31,8 @@ spec:
           value: "{{GOOGLE_CLOUD_PROJECT}}"
         - name: DATA_SOURCE_TYPE
           value: "BIG_QUERY"
+        - name: PARTNER_TYPE
+          value: "{{PARTNER_TYPE}}"  
         - name: BQ_DATASET_NAME
           value: "{{BQ_DATASET_NAME}}"
         - name: API_KEY

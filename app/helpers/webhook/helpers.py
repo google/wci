@@ -22,14 +22,17 @@ import os
 import uuid
 import zlib
 import re
-from typing import Optional
+import urllib.parse
+from typing import Dict, Optional
 from data_sources.data_source import DataSource
 
-PROTOCOL_MESSAGE = os.environ.get('PROTOCOL_MESSAGE')
-data_source = DataSource(os.environ.get('DATA_SOURCE_TYPE')).get_data_source()
+data_source = DataSource(os.environ.get("DATA_SOURCE_TYPE")).get_data_source()
 
-def generate_a_protocol(identifier: str, type: str, payload:Optional[any]) -> Optional[str]:
-   """
+
+def generate_a_protocol(
+    identifier: str, type: str, payload: Optional[any]
+) -> Optional[str]:
+    """
     Helper function for generating a new protocol for a given request.
 
     Parameters:
@@ -37,22 +40,23 @@ def generate_a_protocol(identifier: str, type: str, payload:Optional[any]) -> Op
 
     Output:
        a new Protocol.
-   """
-   
-   # Generates a protocol based on current timestamp
-   protocol = zlib.crc32(f'{uuid.uuid1()}'.encode())
+    """
 
-   # Collects mapping identifiers if any
-   mapped = json.dumps(payload) if payload else None
+    # Generates a protocol based on current timestamp
+    protocol = zlib.crc32(f"{uuid.uuid1()}".encode())
 
-   # Sends protocol to db
-   data_source.save_protocol(identifier, type, protocol, mapped)
+    # Collects mapping identifiers if any
+    mapped = json.dumps(payload) if payload else None
 
-   # Returns the generated protocol
-   return protocol
+    # Sends protocol to db
+    data_source.save_protocol(identifier, type, protocol, mapped)
 
-def get_protocol_by_phone(message:str, sender:str, receiver: bool) -> Optional[str]:
-   """
+    # Returns the generated protocol
+    return protocol
+
+
+def get_protocol_by_phone(message: str, sender: str, receiver: str) -> Optional[str]:
+    """
     Helper function for getting a generated protocol for a given sender.
 
     Parameters:
@@ -62,40 +66,53 @@ def get_protocol_by_phone(message:str, sender:str, receiver: bool) -> Optional[s
 
     Output:
        found protocol or none
-   """
-   # Checks if a protocol is within the given message
-   # If not, returns None
-   has_protocol = re.match(f"{PROTOCOL_MESSAGE} (\w+)", message)
-   
-   # If no protocol was found, returns empty
-   if has_protocol is None:
-      # Saves a copy of the received message
-      data_source.save_message(message, sender, receiver)
-      return None
+    """
+    # Checks if a protocol is within the given message
+    # If not, returns None
+    _protocol_message = os.environ.get("PROTOCOL_MESSAGE").strip()
+    has_protocol = re.match(f"{_protocol_message} (\w+)", message)
 
-   # Captures the first group matched
-   protocol = has_protocol.group(1)
+    # If no protocol was found, returns empty
+    if has_protocol is None:
+        # Saves a copy of the received message
+        data_source.save_message(message, sender, receiver)
+        return None
 
-   # Updates the phone_number by protcol
-   data_source.save_phone_protocol_match(sender, protocol)
+    # Captures the first group matched
+    protocol = has_protocol.group(1)
 
-   # Returns the raw protocol
-   return protocol
+    # Updates the phone_number by protcol
+    data_source.save_phone_protocol_match(sender, protocol)
+
+    # Returns the raw protocol
+    return protocol
+
 
 def get_domain_from_url(url: str) -> str:
-   """
-      Helper function to extract domain from a given url
+    """
+    Helper function to extract domain from a given url
 
-      Parameters:
-         url: full url that may contain paths, paramerters and achors
+    Parameters:
+       url: full url that may contain paths, paramerters and achors
 
-      Output:
-         Extracted domain or "Not set"    
-   """
+    Output:
+       Extracted domain or "Not set"
+    """
 
-   domain = re.match("([^\n\?\=\&\# ]+)", url)
+    domain = re.match("([^\n\?\=\&\# ]+)", url)
 
-   if domain is None:
-         return "Not set"
-   
-   return domain.group(1)
+    if domain is None:
+        return "Not set"
+
+    return domain.group(1)
+
+
+def get_default_messages(protocol: str) -> Dict[str, str]:
+    _protocol_message = os.environ.get("PROTOCOL_MESSAGE").strip()
+    _welcome_message = os.environ.get("WELCOME_MESSAGE").strip()
+
+    return {
+        "message": urllib.parse.quote_plus(f"{_protocol_message} {protocol}. {_welcome_message}"),
+        "protocol_message": _protocol_message,
+        "welcome_message": _welcome_message,
+    }
