@@ -14,103 +14,113 @@
 
 import os
 from middlewares.auth import auth_required
-from helpers.webhook.helpers import generate_a_protocol, get_domain_from_url, get_protocol_by_phone
+from helpers.webhook.helpers import (
+    generate_a_protocol,
+    get_default_messages,
+    get_domain_from_url,
+)
+from partners.partners import Partner
 from flask import Blueprint, request, jsonify
 
-PROTOCOL_MESSAGE = os.environ.get('PROTOCOL_MESSAGE')
-WELCOME_MESSAGE = os.environ.get('WELCOME_MESSAGE')
-STATS_OPTIN = os.environ.get('STATS_OPTIN') 
 
-webhook_page = Blueprint('webhook', __name__)
+webhook_page = Blueprint("webhook", __name__)
 
-@webhook_page.route('/webhook', methods=['GET', 'POST'])
+
+@webhook_page.route("/webhook", methods=["GET", "POST"])
 def process_protocol():
-   """
-   Generates a new protocol
+    """
+    Generates a new protocol
 
-   Parameters:
-      None
-   Output:
-      Returns the newly generated protocol number for the received lead
-   """
+    Parameters:
+       None
+    Output:
+       Returns the newly generated protocol number for the received lead
+    """
 
-   # Collects gclid, phone from the URL
-   identifier = request.args.get('id') 
-   type = request.args.get('type') or 'gclid'
-   
-   # Checks if this is a post with a payload to be associated with
-   # the protocol number
-   payload = None
-   if request.is_json:
-      payload = request.get_json(silent=True)
+    # Collects gclid, phone from the URL
+    identifier = request.args.get("id")
+    type = request.args.get("type") or "gclid"
 
-   # Always generate a protocol for every request
-   has_protocol = generate_a_protocol(identifier, type, payload)
+    # Checks if this is a post with a payload to be associated with
+    # the protocol number
+    payload = None
+    if request.is_json:
+        payload = request.get_json(silent=True)
 
-   # Stats of usage
-   if STATS_OPTIN != 'no':
-      try:
-         from tadau.measurement_protocol import Tadau
-         Tadau().process([{
-            'client_id': f"{has_protocol}",
-            'name': 'wci',
-            'action': 'lead',
-            'context': get_domain_from_url(request.referrer),
-         }])
-      except:
-         pass
+    # Always generate a protocol for every request
+    has_protocol = generate_a_protocol(identifier, type, payload)
+
+    # Stats of usage
+    if os.environ.get("STATS_OPTIN") != "no":
+        try:
+            from tadau.measurement_protocol import Tadau
+
+            Tadau().process(
+                [
+                    {
+                        "client_id": f"{has_protocol}",
+                        "name": "wci",
+                        "action": "lead",
+                        "context": get_domain_from_url(request.referrer),
+                    }
+                ]
+            )
+        except:
+            pass
+
+    # Gets url-safe messages
+    messages = get_default_messages(has_protocol)
+
+    # Returns the generated protocol + default messages
+    return (
+        jsonify(
+            protocol=has_protocol,
+            message=messages.get("message"),
+            protocol_message=messages.get("protocol_message"),
+            welcome_message=messages.get("welcome_message"),
+        ),
+        200,
+    )
 
 
-   # Redirects the request
-   return jsonify(protocol=has_protocol,
-                  message=f"{PROTOCOL_MESSAGE.strip()} {has_protocol}. {WELCOME_MESSAGE.strip()}"
-                  ), 200
-
-@webhook_page.route('/webhook-wci', methods=['POST'])
+@webhook_page.route("/webhook-wci", methods=["POST"])
 def process_message():
-   """
-   Process message received
+    """
+    Process message received
 
-   Parameters:
-      None
-   Output:
-      Status code.
-   """
+    Parameters:
+       None
+    Output:
+       Status code.
+    """
 
-   # Collects the payload received
-   payload = request.get_json()
+    # Collects the payload received
+    partner = Partner(os.environ.get("PARTNER_TYPE")).get_partner()
+    partner.process_message(request.get_json())
 
-   if (payload.get("object") == "whatsapp_business_account" and payload.get("entry") is not None):
-      for each in payload.get("entry"):
-         for change in each['changes']:
-            if change['field'] == "messages" and change['value'].get("messages") is not None:
-               get_protocol_by_phone(
-                  change['value']['messages'][0]['text']['body'], 
-                  change['value']['contacts'][0]['wa_id'],
-                  change['value']['metadata']['display_phone_number']) 
-                  #TODO - this should be adapted to your logic
+    # Always return success
+    return "Success", 200
 
-   # Always return success
-   return "Success", 200
 
-@webhook_page.route('/webhook-wci', methods=['GET'])
+@webhook_page.route("/webhook-wci", methods=["GET"])
 @auth_required
 def validates_challenge(auth_context):
-   """
-   Validates the webhook verification
+    """
+    Validates the webhook verification
 
-   Parameters:
-      None
-   Output:
-      Returns the challenge
-   """
+    Parameters:
+       None
+    Output:
+       Returns the challenge
+    """
 
-   # Collects token and challenge
-   challenge = request.args.get('hub.challenge')
+    # Collects token and challenge
+    challenge = request.args.get("hub.challenge")
 
-   # Redirects the request
-   return challenge, 200
- 
-@webhook_page.route('/health_checker', methods=['GET'])
+    # Redirects the request
+    return challenge, 200
+
+
+@webhook_page.route("/health_checker", methods=["GET"])
 def health_checker():
-    return 'alive', 200 
+    return "alive", 200
