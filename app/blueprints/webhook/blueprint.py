@@ -14,11 +14,12 @@
 
 import os
 from middlewares.auth import auth_required
-from helpers.webhook.helpers import (
-    generate_a_protocol,
-    get_default_messages,
-    get_domain_from_url,
-)
+# from helpers.webhook.helpers import (
+#     generate_a_protocol,
+#     get_default_messages,
+#     get_domain_from_url,
+# )
+from helpers.webhook.helpers import generate_a_protocol, get_default_messages, get_domain_from_url
 from partners.partners import Partner
 from flask import Blueprint, request, jsonify
 
