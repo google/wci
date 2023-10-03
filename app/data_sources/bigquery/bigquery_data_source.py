@@ -157,7 +157,7 @@ class BigQueryDataStream:
             {"identifier": identifier, "type": type, "protocol": protocol, "mapped": mapped, "timestamp": self._current_time.timestamp()}
         ]
 
-        errors = self._bq_client.insert_rows_json(BQ_LINKED_TABLE, rows_to_insert)  
+        errors = self._bq_client.insert_rows_json(BQ_LEAD_TABLE, rows_to_insert)  
 
         if errors == []:
             print("New rows have been added.")
