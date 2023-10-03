@@ -16,121 +16,19 @@
 A BigQuery extension for Data Sources
 """
 
+import json
 import os
 from typing import Dict, Optional
 from google.cloud import bigquery
 import datetime
 
+BQ_PENDING_LEAD_TABLE = os.environ.get("BQ_PENDING_LEAD_TABLE")
 BQ_LEAD_TABLE = os.environ.get("BQ_LEAD_TABLE")
-BQ_LINKED_TABLE = os.environ.get("BQ_LINKED_TABLE")
 BQ_CHAT_TABLE = os.environ.get("BQ_CHAT_TABLE")
 
 
 class BigQueryDataSource:
     """BigQuery as datasource"""
-
-    def __init__(self):
-        # TODO(mr-lopes): adds client settings such as location
-        self._bq_client = bigquery.Client()
-
-    def save_protocol(
-        self,
-        identifier: str,
-        type: str,
-        protocol: str,
-        mapped: Optional[Dict[str, str]],
-    ):
-        """
-        Saves a protocol number with identifier and mapped values
-
-        Parameters:
-            identifier: gclid, client_id, etc
-            type: indicates the type of identifier (gclid, etc)
-            protocol: a generated protocol
-            mapped: any additional value[s] to be associated with the protocol
-        """
-
-        query = f"""
-            INSERT INTO `{BQ_LEAD_TABLE}` (identifier, type, protocol, mapped, timestamp)
-            VALUES (
-                @identifier,
-                @type,
-                @protocol,
-                @mapped,
-                CURRENT_TIMESTAMP()
-            ) 
-            """
-
-        job_config = bigquery.QueryJobConfig(
-            query_parameters=[
-                bigquery.ScalarQueryParameter("identifier", "STRING", identifier),
-                bigquery.ScalarQueryParameter("type", "STRING", type),
-                bigquery.ScalarQueryParameter("protocol", "STRING", protocol),
-                bigquery.ScalarQueryParameter("mapped", "JSON", mapped),
-            ]
-        )
-
-        self._bq_client.query(query, job_config=job_config).result()
-
-    def save_phone_protocol_match(self, phone: str, protocol: str):
-        """
-        Saves a protocol matched to a number (phone)
-
-        Parameters:
-            phone: phone number
-            protocol: protocol sent by phone number
-        """
-
-        query = f"""
-            INSERT INTO `{BQ_LINKED_TABLE}` (protocol, phone, timestamp)
-            VALUES ( 
-                @protocol,
-                @phone,
-                CURRENT_TIMESTAMP()
-            )
-            """
-
-        job_config = bigquery.QueryJobConfig(
-            query_parameters=[
-                bigquery.ScalarQueryParameter("protocol", "STRING", protocol),
-                bigquery.ScalarQueryParameter("phone", "STRING", phone),          
-            ]
-        )
-
-        self._bq_client.query(query, job_config=job_config).result()
-
-    def save_message(self, message: str, sender: str, receiver: str):
-        """
-        Saves menssage sent by phone number (sender)
-
-        Parameters:
-            message: content of message
-            sender: emitter
-            receiver: recipient
-        """
-
-        query = f"""
-            INSERT INTO `{BQ_CHAT_TABLE}` (sender, receiver, message, timestamp)
-            VALUES (
-                @sender,
-                @receiver,
-                @message,
-                CURRENT_TIMESTAMP()
-            ) 
-            """
-
-        job_config = bigquery.QueryJobConfig(
-            query_parameters=[
-                bigquery.ScalarQueryParameter("sender", "STRING", sender),
-                bigquery.ScalarQueryParameter("receiver", "STRING", receiver),
-                bigquery.ScalarQueryParameter("message", "STRING", message),
-            ]
-        )
-
-        self._bq_client.query(query, job_config=job_config).result()
-
-class BigQueryDataStream:
-    """BigQuery Data Stream as datasource"""
 
     def __init__(self):
         # TODO(mr-lopes): adds client settings such as location
@@ -157,12 +55,10 @@ class BigQueryDataStream:
             {"identifier": identifier, "type": type, "protocol": protocol, "mapped": mapped, "timestamp": self._current_time.timestamp()}
         ]
 
-        errors = self._bq_client.insert_rows_json(BQ_LEAD_TABLE, rows_to_insert)  
+        errors = self._bq_client.insert_rows_json(BQ_PENDING_LEAD_TABLE, rows_to_insert)  
 
-        if errors == []:
-            print("New rows have been added.")
-        else:
-            print("Encountered errors while inserting rows: {}".format(errors))
+        if not errors == []:
+           raise Exception("Error while creating pending-lead: {}".format(errors))
 
     def save_phone_protocol_match(self, phone: str, protocol: str):
         """
@@ -176,12 +72,10 @@ class BigQueryDataStream:
             {"phone": phone, "protocol": protocol, "timestamp": self._current_time.timestamp()}
         ]
 
-        errors = self._bq_client.insert_rows_json(BQ_LINKED_TABLE, rows_to_insert)  
+        errors = self._bq_client.insert_rows_json(BQ_LEAD_TABLE, rows_to_insert)  
 
-        if errors == []:
-            print("New rows have been added.")
-        else:
-            print("Encountered errors while inserting rows: {}".format(errors))
+        if not errors == []:
+           raise Exception("Error while creating lead: {}".format(errors))
 
     def save_message(self, message: str, sender: str, receiver: str):
         """
@@ -199,7 +93,87 @@ class BigQueryDataStream:
 
         errors = self._bq_client.insert_rows_json(BQ_CHAT_TABLE, rows_to_insert)  
 
-        if errors == []:
-            print("New rows have been added.")
-        else:
-            print("Encountered errors while inserting rows: {}".format(errors))
+        if not errors == []:
+           raise Exception("Error while creating chat-lead: {}".format(errors))
+
+    def save_ecl_with_protocol(self, protocol: str, identifier: str):
+        """
+        Updates a pending lead into ecl after successfully triggering
+        the ECL beacon
+
+        Parameters:
+            protocol: matched protocol
+        """
+
+        query = f"""
+            UPDATE `{BQ_PENDING_LEAD_TABLE}` SET type = 'ecl'
+            WHERE protocol = @protocol
+            AND identifier = @identifier     
+            """
+
+        job_config = bigquery.QueryJobConfig(
+            query_parameters=[
+                bigquery.ScalarQueryParameter("protocol", "STRING", protocol),
+                bigquery.ScalarQueryParameter("identifier", "STRING", identifier),
+            ]
+        )
+
+        self._bq_client.query(query, job_config=job_config).result()
+
+    def get_protocol_match(self, protocol: str, sender: str):
+        """
+        Gets the lead match for the protocol and sender
+
+        Parameters:
+            protocol: matched protocol
+            sender: emitter
+
+        """
+
+        query = f"""
+            SELECT 
+                plead.identifier, plead.type, plead.protocol, plead.mapped
+            FROM `{BQ_PENDING_LEAD_TABLE}` AS plead
+            INNER JOIN  `{BQ_LEAD_TABLE}` AS lead USING (protocol)
+            WHERE plead.protocol = @protocol
+            AND lead.phone = @sender
+            LIMIT 1
+            """
+
+        job_config = bigquery.QueryJobConfig(
+            query_parameters=[
+                bigquery.ScalarQueryParameter("protocol", "STRING", protocol),
+                bigquery.ScalarQueryParameter("sender", "STRING", sender),
+            ]
+        )
+
+        rows = self._bq_client.query(query, job_config=job_config).result()
+
+        # Maps the query's schema for later use
+        query_schema = {sch.name: sch for sch in rows.schema}
+        for row in rows:
+            return self._convert_row_to_dict(row, query_schema)
+
+    def _convert_row_to_dict(self, row, schema: dict = {}):
+        """
+        Converts a row into dict -- including json'd strings
+
+        Parameters:
+            row: a row from bq's query result
+            schema: query's schema
+
+        """
+        dict = {}
+        for key, value in row.items():
+            # This is necessary because bq.client does not
+            # automatically convert a stringify json into a dict
+            if value and schema and schema[key].field_type.lower() == "json":
+                # In case it's an array of  json, apply the proper
+                # transformation
+                if schema[key].mode.lower() == "repeated":
+                    dict[key] = list(map(json.loads, value))
+                else:
+                    dict[key] = json.loads(value)
+            else:
+                dict[key] = value
+        return dict

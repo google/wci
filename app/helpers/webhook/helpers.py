@@ -17,6 +17,9 @@
 A collection of helper functions for webhook related operations.
 """
 
+import base64
+import hashlib
+import requests
 import json
 import os
 import uuid
@@ -84,6 +87,10 @@ def get_protocol_by_phone(message: str, sender: str, receiver: str) -> Optional[
     # Updates the phone_number by protcol
     data_source.save_phone_protocol_match(sender, protocol)
 
+    # Checks if ECL is enabled
+    if os.environ.get("ECL_ENABLED").lower() == "true":
+        set_protocol_ecl_for_phone(protocol, sender)
+
     # Returns the raw protocol
     return protocol
 
@@ -108,11 +115,95 @@ def get_domain_from_url(url: str) -> str:
 
 
 def get_default_messages(protocol: str) -> Dict[str, str]:
+    """
+    Gets defined, standard messages
+
+    Parameters:
+       protocol: generated protocol
+
+    """
     _protocol_message = os.environ.get("PROTOCOL_MESSAGE").strip()
     _welcome_message = os.environ.get("WELCOME_MESSAGE").strip()
 
     return {
-        "message": urllib.parse.quote_plus(f"{_protocol_message} {protocol}. {_welcome_message}"),
+        "message": urllib.parse.quote_plus(
+            f"{_protocol_message} {protocol}. {_welcome_message}"
+        ),
         "protocol_message": _protocol_message,
         "welcome_message": _welcome_message,
     }
+
+
+def get_safe_phone(phone: str) -> str:
+    """
+    Gets phone number safely
+
+    Parameters:
+       sender: phone who sent the message
+
+    Outputs:
+        phone number only - may include + (e.g. +15555555555)
+
+    """
+    return re.sub(r"[^0-9+]", "", phone)
+
+
+def to_sha256(string: str) -> str:
+    """
+    Receives a string and hashes into sha256
+
+    Parameters:
+       string: str
+
+    """
+    return hashlib.sha256(string.strip().lower().encode("utf-8")).hexdigest()
+
+
+def to_base64(string: str) -> str:
+    """
+    Receives a string and hashes into sha256
+
+    Parameters:
+       string: str
+
+    """
+    return base64.urlsafe_b64encode(string.strip().lower().encode("utf-8"))
+
+
+def set_protocol_ecl_for_phone(protocol: str, sender: str) -> None:
+    """
+    Fires ECL tag for a given protoco and phone number
+
+    Parameters:
+       protocol: matched protocol for processed message
+       sender: phone who sent the message
+
+    """
+    try:
+        # hashes phone number and transfors into base 64
+        hashed_phone = to_base64(to_sha256(get_safe_phone(sender)))
+
+        # gets the data for the matched protocol
+        matched_protocol = data_source.get_protocol_match(protocol, sender)
+
+        if (
+            matched_protocol.get("mapped")
+            and matched_protocol.get("mapped")["conversion_id"]
+        ):
+            if matched_protocol.get("type") == "gclid" and matched_protocol.get(
+                "identifier"
+            ):
+                gclid = matched_protocol.get("identifier")
+                conversion_id = matched_protocol.get("mapped")["conversion_id"]
+                # Targets ECL beacon endpoint
+                url = f"https://google.com/pagead/form-data/{conversion_id}?em=tv.1~pn.{hashed_phone}&gclaw={gclid}"
+                response = requests.get(url)
+
+                # Updates the pending lead into ECL if the ECL beacon
+                # was successfully triggered
+                if response.ok:
+                    data_source.save_ecl_with_protocol(protocol, gclid)
+                else:
+                    print("ECL not fired", response)
+    except:
+        pass
