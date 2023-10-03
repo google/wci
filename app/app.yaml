@@ -41,6 +41,8 @@ spec:
           value: "{{PROTOCOL_MESSAGE}}"
         - name: WELCOME_MESSAGE
           value: "{{WELCOME_MESSAGE}}"
+        - name: STATS_OPTIN
+          value: "{{STATS_OPTIN}}"
         - name: BQ_LEAD_TABLE
           value: "{{GOOGLE_CLOUD_PROJECT}}.{{BQ_DATASET_NAME}}.pending_leads"
         - name: BQ_LINKED_TABLE
