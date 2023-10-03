@@ -17,8 +17,7 @@ A generic data source class to ease the process of integrating with other databa
 """
 
 from enum import Enum
-from data_sources.bigquery.bigquery_data_source import BigQueryDataSource
-from data_sources.bigquery.bigquery_data_source import BigQueryDataStream
+from data_sources.bigquery.bigquery_data_source import BigQueryDataSource, BigQueryDataStream
 
 class SourceType(Enum):
     (BIG_QUERY, BIG_QUERY_STREAM, FILE) = range(3)
