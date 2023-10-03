@@ -17,10 +17,10 @@ A generic data source class to ease the process of integrating with other databa
 """
 
 from enum import Enum
-from data_sources.bigquery.bigquery_data_source import BigQueryDataSource
+from data_sources.bigquery.bigquery_data_source import BigQueryDataSource, BigQueryDataStream
 
 class SourceType(Enum):
-    (BIG_QUERY, FILE) = range(2)
+    (BIG_QUERY, BIG_QUERY_STREAM, FILE) = range(3)
 
 class DataSource:
     def __init__(self, source_type: SourceType):
@@ -29,6 +29,8 @@ class DataSource:
     def get_data_source(self):
         if self._source_type == SourceType.BIG_QUERY:
             return BigQueryDataSource()
+        elif self._source_type == SourceType.BIG_QUERY_STREAM:
+            return BigQueryDataStream()
         else:
             raise NotImplementedError("Source Type not implemented. Please check your configuration.")
       

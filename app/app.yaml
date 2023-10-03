@@ -30,7 +30,7 @@ spec:
         - name: GOOGLE_CLOUD_PROJECT
           value: "{{GOOGLE_CLOUD_PROJECT}}"
         - name: DATA_SOURCE_TYPE
-          value: "BIG_QUERY"
+          value: "BIG_QUERY_STREAM"
         - name: PARTNER_TYPE
           value: "{{PARTNER_TYPE}}"  
         - name: BQ_DATASET_NAME

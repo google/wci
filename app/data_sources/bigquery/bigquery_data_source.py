@@ -19,6 +19,7 @@ A BigQuery extension for Data Sources
 import os
 from typing import Dict, Optional
 from google.cloud import bigquery
+import datetime
 
 BQ_LEAD_TABLE = os.environ.get("BQ_LEAD_TABLE")
 BQ_LINKED_TABLE = os.environ.get("BQ_LINKED_TABLE")
@@ -127,3 +128,78 @@ class BigQueryDataSource:
         )
 
         self._bq_client.query(query, job_config=job_config).result()
+
+class BigQueryDataStream:
+    """BigQuery Data Stream as datasource"""
+
+    def __init__(self):
+        # TODO(mr-lopes): adds client settings such as location
+        self._bq_client = bigquery.Client()
+        self._current_time = datetime.datetime.now()
+
+    def save_protocol(
+        self,
+        identifier: str,
+        type: str,
+        protocol: str,
+        mapped: Optional[Dict[str, str]],
+    ):
+        """
+        Saves a protocol number with identifier and mapped values
+
+        Parameters:
+            identifier: gclid, client_id, etc
+            type: indicates the type of identifier (gclid, etc)
+            protocol: a generated protocol
+            mapped: any additional value[s] to be associated with the protocol
+        """
+        rows_to_insert = [
+            {"identifier": identifier, "type": type, "protocol": protocol, "mapped": mapped, "timestamp": self._current_time.timestamp()}
+        ]
+
+        errors = self._bq_client.insert_rows_json(BQ_LEAD_TABLE, rows_to_insert)  
+
+        if errors == []:
+            print("New rows have been added.")
+        else:
+            print("Encountered errors while inserting rows: {}".format(errors))
+
+    def save_phone_protocol_match(self, phone: str, protocol: str):
+        """
+        Saves a protocol matched to a number (phone)
+
+        Parameters:
+            phone: phone number
+            protocol: protocol sent by phone number
+        """
+        rows_to_insert = [
+            {"phone": phone, "protocol": protocol, "timestamp": self._current_time.timestamp()}
+        ]
+
+        errors = self._bq_client.insert_rows_json(BQ_LINKED_TABLE, rows_to_insert)  
+
+        if errors == []:
+            print("New rows have been added.")
+        else:
+            print("Encountered errors while inserting rows: {}".format(errors))
+
+    def save_message(self, message: str, sender: str, receiver: str):
+        """
+        Saves menssage sent by phone number (sender)
+
+        Parameters:
+            message: content of message
+            sender: emitter
+            receiver: recipient
+        """
+
+        rows_to_insert = [
+            {"sender": sender, "receiver": receiver, "message": message, "timestamp": self._current_time.timestamp()}
+        ]
+
+        errors = self._bq_client.insert_rows_json(BQ_CHAT_TABLE, rows_to_insert)  
+
+        if errors == []:
+            print("New rows have been added.")
+        else:
+            print("Encountered errors while inserting rows: {}".format(errors))
