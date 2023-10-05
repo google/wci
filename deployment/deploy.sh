@@ -220,6 +220,8 @@ function init() {
         create_bq_tables
         deploy_app
         echo "✅ ${bold}${text_green} Deployment Done!${reset}"
+
+        echo "🟡 ${bold}${text_yellow} Click: https://groups.google.com/g/wci-announce to stay up to date on updates, features and use cases (highly recommended)!"
         echo
     fi
 }
