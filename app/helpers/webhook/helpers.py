@@ -48,11 +48,8 @@ def generate_a_protocol(
     # Generates a protocol based on current timestamp
     protocol = zlib.crc32(f"{uuid.uuid1()}".encode())
 
-    # Collects mapping identifiers if any
-    mapped = json.dumps(payload) if payload else None
-
     # Sends protocol to db
-    data_source.save_protocol(identifier, type, protocol, mapped)
+    data_source.save_protocol(identifier, type, protocol, payload)
 
     # Returns the generated protocol
     return protocol
@@ -158,16 +155,25 @@ def to_sha256(string: str) -> str:
     """
     return hashlib.sha256(string.strip().lower().encode("utf-8")).hexdigest()
 
+def to_bytes(hex_digest: str) -> bytes:
+    """
+    Receives a digested hex from sha256
 
-def to_base64(string: str) -> str:
+    Parameters:
+       hex_digest: str
+
+    """
+    return bytes.fromhex(hex_digest)
+
+def to_base64(from_hex: bytes) -> str:
     """
     Receives a string and hashes into sha256
 
     Parameters:
-       string: str
+       from_hex: str
 
     """
-    return base64.urlsafe_b64encode(string.strip().lower().encode("utf-8"))
+    return base64.urlsafe_b64encode(from_hex).rstrip(b"=").decode("utf-8")
 
 
 def set_protocol_ecl_for_phone(protocol: str, sender: str) -> None:
@@ -181,7 +187,9 @@ def set_protocol_ecl_for_phone(protocol: str, sender: str) -> None:
     """
     try:
         # hashes phone number and transfors into base 64
-        hashed_phone = to_base64(to_sha256(get_safe_phone(sender)))
+        sha256_phone = to_sha256(get_safe_phone(sender))
+        # mimis transformation for firing the tag
+        hashed_phone = to_base64(to_bytes(sha256_phone))
 
         # gets the data for the matched protocol
         matched_protocol = data_source.get_protocol_match(protocol, sender)
@@ -197,13 +205,13 @@ def set_protocol_ecl_for_phone(protocol: str, sender: str) -> None:
                 conversion_id = matched_protocol.get("mapped")["conversion_id"]
                 # Targets ECL beacon endpoint
                 url = f"https://google.com/pagead/form-data/{conversion_id}?em=tv.1~pn.{hashed_phone}&gclaw={gclid}"
-                response = requests.get(url)
+                response = requests.post(url)
 
-                # Updates the pending lead into ECL if the ECL beacon
-                # was successfully triggered
+                # Updates a pending lead into ecl after successfully triggering
+                # the ECL beacon
                 if response.ok:
-                    data_source.save_ecl_with_protocol(protocol, gclid)
+                    data_source.save_protocol(sha256_phone, 'ecl', protocol,  matched_protocol.get("mapped"))
                 else:
-                    print("ECL not fired", response)
+                    print(f"ECL not fired for {protocol}", response)
     except:
         pass

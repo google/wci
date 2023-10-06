@@ -51,14 +51,21 @@ class BigQueryDataSource:
             protocol: a generated protocol
             mapped: any additional value[s] to be associated with the protocol
         """
+
         rows_to_insert = [
-            {"identifier": identifier, "type": type, "protocol": protocol, "mapped": mapped, "timestamp": self._current_time.timestamp()}
+            {
+                "identifier": identifier,
+                "type": type,
+                "protocol": protocol,
+                "mapped": json.dumps(mapped) if mapped else None,
+                "timestamp": self._current_time.timestamp(),
+            }
         ]
 
-        errors = self._bq_client.insert_rows_json(BQ_PENDING_LEAD_TABLE, rows_to_insert)  
+        errors = self._bq_client.insert_rows_json(BQ_PENDING_LEAD_TABLE, rows_to_insert)
 
         if not errors == []:
-           raise Exception("Error while creating pending-lead: {}".format(errors))
+            raise Exception("Error while creating pending-lead: {}".format(errors))
 
     def save_phone_protocol_match(self, phone: str, protocol: str):
         """
@@ -69,13 +76,17 @@ class BigQueryDataSource:
             protocol: protocol sent by phone number
         """
         rows_to_insert = [
-            {"phone": phone, "protocol": protocol, "timestamp": self._current_time.timestamp()}
+            {
+                "phone": phone,
+                "protocol": protocol,
+                "timestamp": self._current_time.timestamp(),
+            }
         ]
 
-        errors = self._bq_client.insert_rows_json(BQ_LEAD_TABLE, rows_to_insert)  
+        errors = self._bq_client.insert_rows_json(BQ_LEAD_TABLE, rows_to_insert)
 
         if not errors == []:
-           raise Exception("Error while creating lead: {}".format(errors))
+            raise Exception("Error while creating lead: {}".format(errors))
 
     def save_message(self, message: str, sender: str, receiver: str):
         """
@@ -88,37 +99,18 @@ class BigQueryDataSource:
         """
 
         rows_to_insert = [
-            {"sender": sender, "receiver": receiver, "message": message, "timestamp": self._current_time.timestamp()}
+            {
+                "sender": sender,
+                "receiver": receiver,
+                "message": message,
+                "timestamp": self._current_time.timestamp(),
+            }
         ]
 
-        errors = self._bq_client.insert_rows_json(BQ_CHAT_TABLE, rows_to_insert)  
+        errors = self._bq_client.insert_rows_json(BQ_CHAT_TABLE, rows_to_insert)
 
         if not errors == []:
-           raise Exception("Error while creating chat-lead: {}".format(errors))
-
-    def save_ecl_with_protocol(self, protocol: str, identifier: str):
-        """
-        Updates a pending lead into ecl after successfully triggering
-        the ECL beacon
-
-        Parameters:
-            protocol: matched protocol
-        """
-
-        query = f"""
-            UPDATE `{BQ_PENDING_LEAD_TABLE}` SET type = 'ecl'
-            WHERE protocol = @protocol
-            AND identifier = @identifier     
-            """
-
-        job_config = bigquery.QueryJobConfig(
-            query_parameters=[
-                bigquery.ScalarQueryParameter("protocol", "STRING", protocol),
-                bigquery.ScalarQueryParameter("identifier", "STRING", identifier),
-            ]
-        )
-
-        self._bq_client.query(query, job_config=job_config).result()
+            raise Exception("Error while creating chat-lead: {}".format(errors))
 
     def get_protocol_match(self, protocol: str, sender: str):
         """
