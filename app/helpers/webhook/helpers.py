@@ -20,7 +20,6 @@ A collection of helper functions for webhook related operations.
 import base64
 import hashlib
 import requests
-import json
 import os
 import uuid
 import zlib
@@ -142,7 +141,16 @@ def get_safe_phone(phone: str) -> str:
         phone number only - may include + (e.g. +15555555555)
 
     """
-    return re.sub(r"[^0-9+]", "", phone)
+
+    # Checks if it's valid phone number (without +)
+    is_valid = re.match(r"\d{8,15}", phone)
+
+    # Returns its raw value if it's not a valid phone number
+    if is_valid is None:
+        return phone
+
+    # Otherwise, extracts only numbers and includes plus code
+    return "+{}".format(re.sub(r"[^0-9]", "", phone))
 
 
 def to_sha256(string: str) -> str:
