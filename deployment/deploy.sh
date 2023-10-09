@@ -119,8 +119,12 @@ function deploy_app(){
     echo -n "How would like to connect to your WhatsApp Business Account? Through BOTMAKER, TAKE, WHATSAPP (Choose and type one):"
     read -r PARTNER_TYPE
 
-    echo -n "Optin to collect usage stats to improve the solution (E.g. yes/no):"
+    echo -n "Would you like to enable ECL - Enhanced Conversion for Leads? (E.g. true/false):"
+    read -r ECL_ENABLED
+
+    echo -n "Optin to collect usage stats to improve the solution. This helps us suporting the solution (E.g. yes/no):"
     read -r STATS_OPTIN
+
 
     cp ./app/app.yaml ./deployment/
 
@@ -133,11 +137,15 @@ function deploy_app(){
     sed -i "s/{{WELCOME_MESSAGE}}/${WELCOME_MESSAGE}/g" ./deployment/app.yaml
     sed -i "s/{{STATS_OPTIN}}/${STATS_OPTIN}/g" ./deployment/app.yaml
     sed -i "s/{{PARTNER_TYPE}}/${PARTNER_TYPE}/g" ./deployment/app.yaml
+    sed -i "s/{{ECL_ENABLED}}/${ECL_ENABLED}/g" ./deployment/app.yaml
     echo
 
     # Create repository for docker image
     create_artifacts
-    echo    
+    echo
+
+    # Forces to sleep in order to artifact be uploaded completely
+    sleep 45s    
 
     # Deploys the service 
     start_message "Deploying WCI Service..."

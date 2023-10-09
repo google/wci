@@ -30,7 +30,7 @@ spec:
         - name: GOOGLE_CLOUD_PROJECT
           value: "{{GOOGLE_CLOUD_PROJECT}}"
         - name: DATA_SOURCE_TYPE
-          value: "BIG_QUERY_STREAM"
+          value: "BIG_QUERY"
         - name: PARTNER_TYPE
           value: "{{PARTNER_TYPE}}"  
         - name: BQ_DATASET_NAME
@@ -43,9 +43,11 @@ spec:
           value: "{{WELCOME_MESSAGE}}"
         - name: STATS_OPTIN
           value: "{{STATS_OPTIN}}"
-        - name: BQ_LEAD_TABLE
+        - name: ECL_ENABLED
+          value: "{{ECL_ENABLED}}"
+        - name: BQ_PENDING_LEAD_TABLE
           value: "{{GOOGLE_CLOUD_PROJECT}}.{{BQ_DATASET_NAME}}.pending_leads"
-        - name: BQ_LINKED_TABLE
+        - name: BQ_LEAD_TABLE
           value: "{{GOOGLE_CLOUD_PROJECT}}.{{BQ_DATASET_NAME}}.leads"
         - name: BQ_CHAT_TABLE
           value: "{{GOOGLE_CLOUD_PROJECT}}.{{BQ_DATASET_NAME}}.chat_leads"

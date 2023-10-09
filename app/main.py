@@ -23,14 +23,6 @@ from blueprints import *
 
 import os
 
-# Enable Google Cloud Debugger
-# See https://cloud.google.com/debugger/docs/setup/python for more information.
-try:
-    import googleclouddebugger
-    googleclouddebugger.enable()
-except ImportError:
-    pass
-
 app = Flask(__name__)
 # Enables CORS on the app
 # For safety, origins can be set into CORS
@@ -41,5 +33,5 @@ CORS(app)
 app.secret_key = os.urandom(12).hex()
 app.register_blueprint(webhook_page)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
