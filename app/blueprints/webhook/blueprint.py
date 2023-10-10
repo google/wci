@@ -120,6 +120,65 @@ def validates_challenge(auth_context):
     # Redirects the request
     return challenge, 200
 
+#TODO(jraucci): add new webhook-ctm with #@auth protected
+@webhook_page.route("/webhook-ctm", methods=["POST"])
+#@auth_required
+def process_chat_id():
+    """
+    Generates a new protocol
+
+    Parameters:
+       None
+    Output:
+       Returns the newly generated protocol number for the received lead
+    """
+
+    # Collects gclid, chatid from the URL
+    identifier = request.args.get("gclid")
+    protocol = request.args.get("chatid")
+    type = "gclid"
+
+    # Checks if this is a post with a payload to be associated with
+    # the protocol number
+    payload = None
+    if request.is_json:
+        payload = request.get_json(silent=True)
+
+    # Always generate a protocol for every request
+    # has_protocol = generate_a_protocol(identifier, protocol, payload)
+    save_protocol = 
+
+    # Stats of usage
+    if os.environ.get("STATS_OPTIN") != "no":
+        try:
+            from tadau.measurement_protocol import Tadau
+
+            Tadau().process(
+                [
+                    {
+                        "client_id": f"{has_protocol}",
+                        "name": "wci",
+                        "action": "lead",
+                        "context": get_domain_from_url(request.referrer),
+                    }
+                ]
+            )
+        except:
+            pass
+
+    # Gets url-safe messages
+    messages = get_default_messages(has_protocol)
+
+    # Returns the generated protocol + default messages
+    return (
+        jsonify(
+            protocol=has_protocol,
+            message=messages.get("message"),
+            protocol_message=messages.get("protocol_message"),
+            welcome_message=messages.get("welcome_message"),
+        ),
+        200,
+    )
 
 @webhook_page.route("/health_checker", methods=["GET"])
 def health_checker():

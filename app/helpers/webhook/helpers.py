@@ -69,6 +69,7 @@ def get_protocol_by_phone(message: str, sender: str, receiver: str) -> Optional[
     """
     # Checks if a protocol is within the given message
     # If not, returns None
+    #TODO(jraucci): Create match with CHAT_ID REGEXP
     _protocol_message = os.environ.get("PROTOCOL_MESSAGE").strip()
     has_protocol = re.match(f"{_protocol_message} (\w+)", message)
 
