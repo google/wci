@@ -138,13 +138,14 @@ def process_chat_id():
     # Collects gclid, chatid from the URL
     identifier = request.args.get("gclid")
     protocol = request.args.get("chatid")
-    type = "gclid_ctm"
+    type = "gclid"
 
     # Checks if this is a post with a payload to be associated with
     # the protocol number
-    payload = None
-    # if request.is_json:
-    #     payload = request.get_json(silent=True)
+    payload= {}
+    if request.is_json:
+        payload = request.get_json(silent=True)
+    payload['ctm'] = True
 
     save_protocol(identifier, type, protocol, payload)
 
