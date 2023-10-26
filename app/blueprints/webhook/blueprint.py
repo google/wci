@@ -138,7 +138,7 @@ def process_chat_id():
     # Collects gclid, chatid from the URL
     identifier = request.args.get("gclid")
     protocol = request.args.get("chatid")
-    type = "gclid"
+    type = "gclid_ctm"
 
     # Checks if this is a post with a payload to be associated with
     # the protocol number
@@ -166,7 +166,7 @@ def process_chat_id():
         except:
             pass
 
-    return 200
+    return "Success", 200
 
 @webhook_page.route("/health_checker", methods=["GET"])
 def health_checker():
