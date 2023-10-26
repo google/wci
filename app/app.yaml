@@ -39,6 +39,8 @@ spec:
           value: "{{API_KEY}}"
         - name: PROTOCOL_MESSAGE
           value: "{{PROTOCOL_MESSAGE}}"
+        - name: CTM_PROTOCOL_MESSAGE
+          value: "Chat ID: "
         - name: WELCOME_MESSAGE
           value: "{{WELCOME_MESSAGE}}"
         - name: STATS_OPTIN

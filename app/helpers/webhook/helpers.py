@@ -32,14 +32,9 @@ from data_sources.data_source import DataSource
 data_source = DataSource(os.environ.get("DATA_SOURCE_TYPE")).get_data_source()
 
 
-def generate_a_protocol(
-    identifier: str, type: str, payload: Optional[any]
-) -> Optional[str]:
+def generate_a_protocol() -> Optional[str]:
     """
     Helper function for generating a new protocol for a given request.
-
-    Parameters:
-       identifier (str): to be associated with the new protocol. E.g. gclid, device_id, phone_number, etc.
 
     Output:
        a new Protocol.
@@ -49,10 +44,29 @@ def generate_a_protocol(
     protocol = zlib.crc32(f"{uuid.uuid1()}".encode())
 
     # Sends protocol to db
-    data_source.save_protocol(identifier, type, protocol, payload)
+    # data_source.save_protocol(identifier, type, protocol, payload)
 
     # Returns the generated protocol
     return protocol
+
+def save_protocol(
+    identifier: str, type: str, protocol: str, payload: Optional[any]) -> Optional[str]:
+    """
+    Helper function for saving protocols and identifiers.
+
+    Parameters:
+       identifier (str): to be associated with the new protocol.
+       type (str): type of the identifier. E.g. gclid, device_id, phone_number, etc.
+       protocol (str): protocol number
+
+    Output:
+       a new Protocol.
+    """
+    # Sends protocol to db
+    data_source.save_protocol(identifier, type, protocol, payload)
+
+    # Returns the generated protocol
+    return 200
 
 
 def get_protocol_by_phone(message: str, sender: str, receiver: str) -> Optional[str]:
@@ -69,9 +83,9 @@ def get_protocol_by_phone(message: str, sender: str, receiver: str) -> Optional[
     """
     # Checks if a protocol is within the given message
     # If not, returns None
-    #TODO(jraucci): Create match with CHAT_ID REGEXP
     _protocol_message = os.environ.get("PROTOCOL_MESSAGE").strip()
-    has_protocol = re.match(f"{_protocol_message} (\w+)", message)
+    _ctm_message = os.environ.get("CTM_PROTOCOL_MESSAGE").strip()
+    has_protocol = re.match(f"({_protocol_message}|{_ctm_message}) (\w+)", message)
 
     # If no protocol was found, returns empty
     if has_protocol is None:
@@ -79,8 +93,8 @@ def get_protocol_by_phone(message: str, sender: str, receiver: str) -> Optional[
         data_source.save_message(message, sender, receiver)
         return None
 
-    # Captures the first group matched
-    protocol = has_protocol.group(1)
+    # Captures the second group matched
+    protocol = has_protocol.group(2)
 
     # Updates the phone_number by protcol
     data_source.save_phone_protocol_match(sender, protocol)
