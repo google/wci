@@ -25,6 +25,7 @@ import uuid
 import zlib
 import re
 import urllib.parse
+from flask import Request
 from typing import Dict, Optional
 from data_sources.data_source import DataSource
 
@@ -91,9 +92,9 @@ def get_protocol_by_phone(message: str, sender: str, receiver: str) -> Optional[
     return protocol
 
 
-def get_domain_from_url(url: str) -> str:
+def get_domain_from_request(request: Request) -> str:
     """
-    Helper function to extract domain from a given url
+    Helper function to extract domain from Request
 
     Parameters:
        url: full url that may contain paths, paramerters and achors
@@ -101,6 +102,15 @@ def get_domain_from_url(url: str) -> str:
     Output:
        Extracted domain or "Not set"
     """
+
+    if request.referrer:
+        url = request.referrer
+    elif request.origin:
+        url = request.origin
+    elif request.host_url:
+        url = request.host_url
+    else:
+        return "Not set"
 
     domain = re.match("([^\n\?\=\&\# ]+)", url)
 
@@ -163,6 +173,7 @@ def to_sha256(string: str) -> str:
     """
     return hashlib.sha256(string.strip().lower().encode("utf-8")).hexdigest()
 
+
 def to_bytes(hex_digest: str) -> bytes:
     """
     Receives a digested hex from sha256
@@ -172,6 +183,7 @@ def to_bytes(hex_digest: str) -> bytes:
 
     """
     return bytes.fromhex(hex_digest)
+
 
 def to_base64(from_hex: bytes) -> str:
     """
@@ -218,7 +230,9 @@ def set_protocol_ecl_for_phone(protocol: str, sender: str) -> None:
                 # Updates a pending lead into ecl after successfully triggering
                 # the ECL beacon
                 if response.ok:
-                    data_source.save_protocol(sha256_phone, 'ecl', protocol,  matched_protocol.get("mapped"))
+                    data_source.save_protocol(
+                        sha256_phone, "ecl", protocol, matched_protocol.get("mapped")
+                    )
                 else:
                     print(f"ECL not fired for {protocol}", response)
     except:

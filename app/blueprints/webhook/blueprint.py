@@ -17,7 +17,7 @@ from middlewares.auth import auth_required
 from helpers.webhook.helpers import (
     generate_a_protocol,
     get_default_messages,
-    get_domain_from_url,
+    get_domain_from_request,
 )
 from partners.partners import Partner
 from flask import Blueprint, request, jsonify
@@ -61,7 +61,7 @@ def process_protocol():
                         "client_id": f"{has_protocol}",
                         "name": "wci",
                         "action": "lead",
-                        "context": get_domain_from_url(request.referrer),
+                        "context": get_domain_from_request(request),
                     }
                 ]
             )
