@@ -160,7 +160,7 @@ def process_chat_id():
                         "client_id": f"{protocol}",
                         "name": "wci",
                         "action": "lead",
-                        "context": get_domain_from_request(request.referrer),
+                        "context": get_domain_from_request(request),
                     }
                 ]
             )
