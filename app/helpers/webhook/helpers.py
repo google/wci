@@ -43,9 +43,6 @@ def generate_a_protocol() -> Optional[str]:
     # Generates a protocol based on current timestamp
     protocol = zlib.crc32(f"{uuid.uuid1()}".encode())
 
-    # Sends protocol to db
-    # data_source.save_protocol(identifier, type, protocol, payload)
-
     # Returns the generated protocol
     return protocol
 
@@ -167,7 +164,7 @@ def get_safe_phone(phone: str) -> str:
 
     """
 
-    # Checks if it's valid phone number (without +)
+    # Checks if phone number is valid (without +)
     is_valid = re.match(r"\d{8,15}", phone)
 
     # Returns its raw value if it's not a valid phone number
