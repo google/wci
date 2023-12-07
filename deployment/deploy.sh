@@ -166,6 +166,7 @@ function deploy_app(){
     echo "${bold}Callback URL: ${text_yellow}${ENDPOINT}/webhook-wci${reset}"
     echo "${bold}Verify token: ${text_yellow}${API_KEY}${reset}"
     echo "${bold}Lead URL: ${text_yellow}${ENDPOINT}/webhook${reset}"
+    echo "${bold}Message Ads URL: ${text_yellow}${ENDPOINT}/webhook-ctm${reset}"
     echo
 }
 function init() {
