@@ -82,7 +82,7 @@ def get_protocol_by_phone(message: str, sender: str, receiver: str) -> Optional[
     # If not, returns None
     _protocol_message = os.environ.get("PROTOCOL_MESSAGE").strip()
     _ctm_message = os.environ.get("CTM_PROTOCOL_MESSAGE").strip()
-    has_protocol = re.match(f"({_protocol_message}|{_ctm_message}) (\w+)", message)
+    has_protocol = re.search(f"({_protocol_message}|{_ctm_message}) (\w+)", message)
 
     # If no protocol was found, returns empty
     if has_protocol is None:
