@@ -35,11 +35,14 @@ class BotmakerPartner:
     def process_message(self, payload):
         if payload.get("contactId") is not None and payload.get("type") == "message":
             for message in payload.get("messages"):
-                if message.get("fromCustomer") == True:
-                    get_protocol_by_phone(
-                        message.get("message"), payload.get("contactId"), ACCOUNT_NUMBER
-                    )
-                else:
-                    get_protocol_by_phone(
-                        message.get("message"), ACCOUNT_NUMBER, payload.get("contactId")
-                    )
+                try:
+                    if message.get("fromCustomer") == True:
+                        get_protocol_by_phone(
+                            message.get("message"), payload.get("contactId"), ACCOUNT_NUMBER
+                        )
+                    else:
+                        get_protocol_by_phone(
+                            message.get("message"), ACCOUNT_NUMBER, payload.get("contactId")
+                        )
+                except:
+                    continue        
