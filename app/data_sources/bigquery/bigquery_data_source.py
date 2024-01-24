@@ -33,7 +33,6 @@ class BigQueryDataSource:
     def __init__(self):
         # TODO(mr-lopes): adds client settings such as location
         self._bq_client = bigquery.Client()
-        self._current_time = datetime.datetime.now()
 
     def save_protocol(
         self,
@@ -58,7 +57,7 @@ class BigQueryDataSource:
                 "type": type,
                 "protocol": protocol,
                 "mapped": json.dumps(mapped) if mapped else None,
-                "timestamp": self._current_time.timestamp(),
+                "timestamp": datetime.datetime.now().timestamp(),
             }
         ]
 
@@ -79,7 +78,7 @@ class BigQueryDataSource:
             {
                 "phone": phone,
                 "protocol": protocol,
-                "timestamp": self._current_time.timestamp(),
+                "timestamp": datetime.datetime.now().timestamp(),
             }
         ]
 
@@ -103,7 +102,7 @@ class BigQueryDataSource:
                 "sender": sender,
                 "receiver": receiver,
                 "message": message,
-                "timestamp": self._current_time.timestamp(),
+                "timestamp": datetime.datetime.now().timestamp(),
             }
         ]
 
