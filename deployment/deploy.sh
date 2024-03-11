@@ -19,6 +19,13 @@ text_red="$(tput setaf 1)"
 text_yellow="$(tput setaf 3)"
 text_green="$(tput setaf 2)"
 
+# Sets defaults variables
+BQ_DATASET_NAME=${BQ_DATASET_NAME:="wci"}
+BQ_LOCATION=${BQ_DATASET_LOCATION:="US"}
+REGION=${REGION:="us-central1"}
+SERVICE_ACCOUNT_NAME=${SERVICE_ACCOUNT_NAME:="wci-runner"}
+SERVICE_ACCOUNT="${SERVICE_ACCOUNT_NAME}@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com"
+
 function start_message() {
     echo "☑️  ${bold}${text_green}$1${reset}"
 }
@@ -45,6 +52,10 @@ function create_artifacts(){
     --description="WCI Repo"
     echo
 
+    # Uploads artifacts 
+    upload_artifacts
+}
+function upload_artifacts(){
     # Ensures docker is logged-in
     # If not, there may be a permission denied when uploading
     # the artifcats
@@ -104,6 +115,15 @@ function create_bq_tables(){
     protocol:STRING,phone:STRING,timestamp:TIMESTAMP
     echo
 }
+function show_endpoints(){
+    ENDPOINT="$(gcloud run services list | grep -oP '(http|https)://wci(.*)')"
+    echo "${bold}${text_yellow}NEXT STEPS: To finalize, set your account's webhook to${reset}"
+    echo "${bold}Callback URL: ${text_yellow}${ENDPOINT}/webhook-wci${reset}"
+    echo "${bold}Verify token: ${text_yellow}${API_KEY}${reset}"
+    echo "${bold}Lead URL: ${text_yellow}${ENDPOINT}/webhook${reset}"
+    echo "${bold}Message Ads URL: ${text_yellow}${ENDPOINT}/webhook-ctm${reset}"
+    echo
+}
 function deploy_app(){
     echo "${bold}${text_green}To deploy, inform the following values:${reset}"
 
@@ -161,15 +181,29 @@ function deploy_app(){
     --role="roles/run.invoker"
     echo
 
-    ENDPOINT="$(gcloud run services list | grep -oP '(http|https)://wci(.*)')"
-    echo "${bold}${text_yellow}NEXT STEPS: To finalize, set your account's webhook to${reset}"
-    echo "${bold}Callback URL: ${text_yellow}${ENDPOINT}/webhook-wci${reset}"
-    echo "${bold}Verify token: ${text_yellow}${API_KEY}${reset}"
-    echo "${bold}Lead URL: ${text_yellow}${ENDPOINT}/webhook${reset}"
-    echo "${bold}Message Ads URL: ${text_yellow}${ENDPOINT}/webhook-ctm${reset}"
-    echo
+    show_endpoints
 }
 function init() {
+
+    # Firstly checks for flags
+    # In case the user is only interested in updating their service
+    # to the lastest version, then skips the entire deployment
+    # and builds artifacts and renews the cloud run revision to
+    # the latest one  
+    if [ $flag_service = "update" ]; then
+        start_message "Updating WCI service..."
+        upload_artifacts
+        # Forces to sleep in order to artifact be uploaded completely
+        sleep 45s
+        gcloud run services update wci --image=$REGION-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/wci/wci:latest --region=$REGION 
+        echo "✅ ${bold}${text_green} WCI updated!${reset}"
+        echo
+        show_endpoints
+        echo
+    return;
+    fi
+
+    # Initiates deployment
     echo
     echo "${bold}┌────────────────┐${reset}"
     echo "${bold}│ WCI Deployment │${reset}"
@@ -182,18 +216,6 @@ function init() {
         echo "${bold}${text_yellow}WARNING! You are not running this script from the Google Cloud Shell environment.${reset}"
         echo
     fi
-
-    # Get parameters
-    if [ -z "${GOOGLE_CLOUD_PROJECT}" ]; then
-        GOOGLE_CLOUD_PROJECT="$(gcloud config get-value project)"
-    fi
-    
-    #Collects variables
-    BQ_DATASET_NAME=${BQ_DATASET_NAME:="wci"}
-    BQ_LOCATION=${BQ_DATASET_LOCATION:="US"}
-    REGION=${REGION:="us-central1"}
-    SERVICE_ACCOUNT_NAME=${SERVICE_ACCOUNT_NAME:="wci-runner"}
-    SERVICE_ACCOUNT="${SERVICE_ACCOUNT_NAME}@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com"
 
     # Confirm details
     echo
@@ -234,5 +256,18 @@ function init() {
         echo
     fi
 }
+
+for ARGUMENT in "$@"
+do
+   KEY=$(echo $ARGUMENT | cut -f1 -d=)
+   KEY_LENGTH=${#KEY}
+   VALUE="${ARGUMENT:$KEY_LENGTH+1}"
+   export "flag_$KEY"="$VALUE"
+done
+
+# Get parameters
+if [ -z "${GOOGLE_CLOUD_PROJECT}" ]; then
+    GOOGLE_CLOUD_PROJECT="$(gcloud config get-value project)"
+fi
 
 init
