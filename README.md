@@ -21,6 +21,12 @@ In the Cloud Shell, execute the following command:
 git clone https://github.com/google/wci && cd wci && sh ./deployment/deploy.sh
 ```
 
+## Updating WCI to the latest version
+In the Cloud Shell, execute the following command:
+``` shell
+git clone https://github.com/google/wci && cd wci && sh ./deployment/deploy.sh service=update
+```
+
 ## Guided Deployment
 If you want to do a guided deployment through Cloud Shell, click the link below:<br>
 [![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2Fgoogle%2Fwci&cloudshell_git_branch=main&cloudshell_tutorial=tutorial.md)
