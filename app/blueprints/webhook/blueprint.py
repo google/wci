@@ -139,13 +139,25 @@ def process_chat_id():
     identifier = request.args.get("gclid")
     protocol = request.args.get("chatid")
     type = "gclid"
-
+    # Gets click's details if there is any
+    campaign_id = request.args.get("campaignid")
+    adgroup_id = request.args.get("adgroupid")
+    ad_id = request.args.get("adid")
+    
     # Checks if this is a post with a payload to be associated with
     # the protocol number
     payload= {}
     if request.is_json:
         payload = request.get_json(silent=True)
     payload['ctm'] = True
+
+    # Adds click's details to the mapped column
+    if campaign_id:
+        payload['campaignid'] = campaign_id
+    if adgroup_id:
+        payload['adgroupid'] = adgroup_id
+    if ad_id:
+        payload['adid'] = ad_id
 
     save_protocol(identifier, type, protocol, payload)
 
