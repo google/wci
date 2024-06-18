@@ -83,23 +83,23 @@ def get_protocol_by_phone(message: str, sender: str, receiver: str) -> Optional[
     _protocol_message = os.environ.get("PROTOCOL_MESSAGE").strip()
     _ctm_message = os.environ.get("CTM_PROTOCOL_MESSAGE").strip()
     has_protocol = re.search(f"({_protocol_message}|{_ctm_message}) (\w+)", message)
+    protocol = None
 
-    # If no protocol was found, returns empty
-    if has_protocol is None:
-        # Saves a copy of the received message
-        data_source.save_message(message, sender, receiver)
-        return None
+    # If a protocol was found, creates a match with sender
+    if has_protocol:
+        # Captures the second group matched
+        protocol = has_protocol.group(2)
 
-    # Captures the second group matched
-    protocol = has_protocol.group(2)
+        # Updates the phone_number by protcol
+        data_source.save_phone_protocol_match(sender, protocol)
 
-    # Updates the phone_number by protcol
-    data_source.save_phone_protocol_match(sender, protocol)
+        # Checks if ECL is enabled
+        if os.environ.get("ECL_ENABLED").lower() == "true":
+            set_protocol_ecl_for_phone(protocol, sender)
 
-    # Checks if ECL is enabled
-    if os.environ.get("ECL_ENABLED").lower() == "true":
-        set_protocol_ecl_for_phone(protocol, sender)
-
+     # Saves a copy of the received message
+    data_source.save_message(message, sender, receiver)
+        
     # Returns the raw protocol
     return protocol
 
@@ -115,9 +115,7 @@ def get_domain_from_request(request: Request) -> str:
        Extracted domain or "Not set"
     """
 
-    if request.referrer:
-        url = request.referrer
-    elif request.origin:
+    if request.origin:
         url = request.origin
     elif request.host_url:
         url = request.host_url
