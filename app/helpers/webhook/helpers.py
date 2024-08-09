@@ -27,9 +27,9 @@ import re
 import urllib.parse
 from flask import Request
 from typing import Dict, Optional
-from data_sources.data_source import DataSource
+from data_sources.factory import DataSourceFactory
 
-data_source = DataSource(os.environ.get("DATA_SOURCE_TYPE")).get_data_source()
+data_source = DataSourceFactory(os.environ.get("DATA_SOURCE_TYPE")).get()
 
 
 def generate_a_protocol() -> Optional[str]:

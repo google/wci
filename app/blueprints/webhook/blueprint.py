@@ -20,7 +20,7 @@ from helpers.webhook.helpers import (
     get_domain_from_request,
     save_protocol
 )
-from partners.partners import Partner
+from partners.factory import PartnerFactory
 from flask import Blueprint, request, jsonify
 
 webhook_page = Blueprint("webhook", __name__)
@@ -97,7 +97,7 @@ def process_message():
     """
 
     # Collects the payload received
-    partner = Partner(os.environ.get("PARTNER_TYPE")).get_partner()
+    partner = PartnerFactory(os.environ.get("PARTNER_TYPE")).get()
     partner.process_message(request.get_json())
 
     # Always return success
