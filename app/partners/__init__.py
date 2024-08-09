@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC.
+# Copyright 2024 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,25 +13,13 @@
 # limitations under the License.
 
 """
-A Take extension for Partners
+A generic partner class to ease the process of integrating with bot managing companies
 """
 
-from partners import Partner
-from helpers.webhook.helpers import get_protocol_by_phone
+from abc import ABC, abstractmethod
 
 
-class TakePartner(Partner):
-    """
-    Process message received
-
-    Parameters:
-        payload: Take | Blip's webhook payload
-            Ref.: https://help.blip.ai/hc/en-us/articles/4474381206423-Submitting-data-for-analysis-through-Webhooks
-
-    """
-
+class Partner(ABC):
+    @abstractmethod
     def process_message(self, payload):
-        if payload.get("type") == "text/plain":
-            get_protocol_by_phone(
-                payload.get("content"), payload.get("from"), payload.get("to")
-            )
+        pass

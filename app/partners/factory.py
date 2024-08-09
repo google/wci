@@ -13,35 +13,38 @@
 # limitations under the License.
 
 """
-A generic partner class to ease the process of integrating with bot managing companies
+A factory partner class to ease the process of integrating with bot managing companies
 """
 
 from enum import Enum
+from partners import Partner
 from partners.whatsapp.whatsapp_partner import WhatsAppPartner
 from partners.botmaker.botmaker_partner import BotmakerPartner
+from partners.infobip.infobip_partner import InfobipPartner
 from partners.take.take_partner import TakePartner
 
 
 class PartnerType(Enum):
-    (BOTMAKER, TAKE, WHATSAPP) = range(3)
+    (BOTMAKER, TAKE, WHATSAPP, INFOBIP) = range(4)
 
 
-class Partner:
+AVAILABLE_PARTNERS = {
+    PartnerType.BOTMAKER: BotmakerPartner(),
+    PartnerType.TAKE: TakePartner(),
+    PartnerType.WHATSAPP: WhatsAppPartner(),
+    PartnerType.INFOBIP: InfobipPartner(),
+}
+
+
+class PartnerFactory:
     def __init__(self, partner_type: PartnerType):
-        self._partner_type = PartnerType[partner_type]
+        self._partner = PartnerType[partner_type]
 
-    def get_partner(self):
-        match self._partner_type:
-            case PartnerType.BOTMAKER:
-                return BotmakerPartner()
-
-            case PartnerType.TAKE:
-                return TakePartner()
-
-            case PartnerType.WHATSAPP:
-                return WhatsAppPartner()
-
-            case _:
-                raise NotImplementedError(
-                    "Partner not implemented. Please check your configuration."
-                )
+    def get(self) -> Partner:
+        if self._partner:
+            return AVAILABLE_PARTNERS.get(self._partner)
+        
+        else:
+            raise NotImplementedError(
+                "Partner not implemented. Please check your configuration."
+            )

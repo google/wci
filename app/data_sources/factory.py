@@ -17,18 +17,25 @@ A generic data source class to ease the process of integrating with other databa
 """
 
 from enum import Enum
+from data_sources import DataSource
 from data_sources.bigquery.bigquery_data_source import BigQueryDataSource
+
 
 class SourceType(Enum):
     (BIG_QUERY, FILE) = range(2)
 
-class DataSource:
-    def __init__(self, source_type: SourceType):
-        self._source_type = SourceType[source_type]
 
-    def get_data_source(self):
-        if self._source_type == SourceType.BIG_QUERY:
-            return BigQueryDataSource()
+AVAILABLE_DATA_SOURCES = {SourceType.BIG_QUERY: BigQueryDataSource()}
+
+
+class DataSourceFactory:
+    def __init__(self, source_type: SourceType):
+        self._source = SourceType[source_type]
+
+    def get(self) -> DataSource:
+        if self._source:
+            return AVAILABLE_DATA_SOURCES.get(self._source)
         else:
-            raise NotImplementedError("Source Type not implemented. Please check your configuration.")
-      
+            raise NotImplementedError(
+                "Data Source not implemented. Please check your configuration."
+            )

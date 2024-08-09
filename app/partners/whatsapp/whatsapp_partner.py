@@ -16,10 +16,11 @@
 A Whatsapp extension for Partners
 """
 
+from partners import Partner
 from helpers.webhook.helpers import get_protocol_by_phone
 
 
-class WhatsAppPartner:
+class WhatsAppPartner(Partner):
     def process_message(self, payload):
         """
         Process message received

@@ -17,12 +17,13 @@ A Botmaker extension for Partners
 """
 
 import os
+from partners import Partner
 from helpers.webhook.helpers import get_protocol_by_phone
 
 ACCOUNT_NUMBER = os.environ.get("ACCOUNT_NUMBER")
 
 
-class BotmakerPartner:
+class BotmakerPartner(Partner):
     """
     Process message received
 

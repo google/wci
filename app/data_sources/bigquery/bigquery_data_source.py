@@ -18,16 +18,17 @@ A BigQuery extension for Data Sources
 
 import json
 import os
+import datetime
 from typing import Dict, Optional
 from google.cloud import bigquery
-import datetime
+from data_sources import DataSource
 
 BQ_PENDING_LEAD_TABLE = os.environ.get("BQ_PENDING_LEAD_TABLE")
 BQ_LEAD_TABLE = os.environ.get("BQ_LEAD_TABLE")
 BQ_CHAT_TABLE = os.environ.get("BQ_CHAT_TABLE")
 
 
-class BigQueryDataSource:
+class BigQueryDataSource(DataSource):
     """BigQuery as datasource"""
 
     def __init__(self):
