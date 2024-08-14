@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC.
+# Copyright 2024 Google LLC.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,17 +11,28 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# How to use this file?
+# Filled out all the missing pieces below (within {{}}), 
+# move the file under /app folder and run on Cloud shell:
+# gcloud app deploy app_engine_flexible.yaml
 runtime: custom
-env: flex 
+env: flex
+service: wci
+service_account: {{SERVICE_ACCOUNT}}
 
 env_variables:
-  BQ_PENDING_LEAD_TABLE: "{{GOOGLE_CLOUD_PROJECT}}.{{BQ_DATASET_NAME}}.pending_leads"
-  BQ_LEAD_TABLE: "{{GOOGLE_CLOUD_PROJECT}}.{{BQ_DATASET_NAME}}.leads" 
-  BQ_CHAT_TABLE: "{{GOOGLE_CLOUD_PROJECT}}.{{BQ_DATASET_NAME}}.chat_leads" 
+  DATA_SOURCE_TYPE: "BIG_QUERY"
+  PARTNER_TYPE: "{{PARTNER_TYPE}}"
+  BQ_PENDING_LEAD_TABLE: "{{GOOGLE_CLOUD_PROJECT}}.wci.pending_leads"
+  BQ_LEAD_TABLE: "{{GOOGLE_CLOUD_PROJECT}}.wci.leads" 
+  BQ_CHAT_TABLE: "{{GOOGLE_CLOUD_PROJECT}}.wci.chat_leads" 
   API_KEY: "{{API_KEY}}"
   PROTOCOL_MESSAGE: "{{PROTOCOL_MESSAGE}}"
   WELCOME_MESSAGE: "{{WELCOME_MESSAGE}}"
-  STATS_OPTIN: "{{STATS_OPTIN}}"
+  CTM_PROTOCOL_MESSAGE: "Chat ID:"
+  ECL_ENABLED: "False"
+  STATS_OPTIN: "Yes"
 
 liveness_check:
   path: '/health_checker'
