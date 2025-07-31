@@ -22,10 +22,11 @@ from partners.whatsapp.whatsapp_partner import WhatsAppPartner
 from partners.botmaker.botmaker_partner import BotmakerPartner
 from partners.infobip.infobip_partner import InfobipPartner
 from partners.take.take_partner import TakePartner
+from partners.hermes.hermes_partner import HermesPartner
 
 
 class PartnerType(Enum):
-    (BOTMAKER, TAKE, WHATSAPP, INFOBIP) = range(4)
+    (BOTMAKER, TAKE, WHATSAPP, INFOBIP, HERMES) = range(5)
 
 
 AVAILABLE_PARTNERS = {
@@ -33,6 +34,7 @@ AVAILABLE_PARTNERS = {
     PartnerType.TAKE: TakePartner(),
     PartnerType.WHATSAPP: WhatsAppPartner(),
     PartnerType.INFOBIP: InfobipPartner(),
+    PartnerType.HERMES: HermesPartner(),
 }
 
 
