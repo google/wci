@@ -136,7 +136,7 @@ function deploy_app(){
     echo -n "Type the message to be sent AFTER the protocol number (E.g. Your protocol is 98765432. Hello, Advertiser):"
     read -r WELCOME_MESSAGE
 
-    echo -n "How would like to connect to your WhatsApp Business Account? Through BOTMAKER, TAKE, INFOBIP, WHATSAPP (Choose and type one):"
+    echo -n "How would like to connect to your WhatsApp Business Account? Through BOTMAKER, TAKE, INFOBIP, HERMES, WHATSAPP (Choose and type one):"
     read -r PARTNER_TYPE
 
     echo -n "Would you like to enable ECL - Enhanced Conversion for Leads? (E.g. true/false):"
